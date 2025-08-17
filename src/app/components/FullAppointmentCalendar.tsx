@@ -1126,7 +1126,7 @@ export default function FullAppointmentCalendar() {
                     min={new Date(selectedDate.setHours(8, 0, 0, 0))}
                     max={new Date(selectedDate.setHours(23, 0, 0, 0))}
                     step={15}
-                    timeslots={1}
+                    timeslots={4}
                     style={{ height: windowWidth <= 550 ? 600 : 700, background: 'white', borderRadius: 12, marginBottom: 24 }}
                     toolbar={false}
                     eventPropGetter={() => ({
