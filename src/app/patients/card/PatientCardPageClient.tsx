@@ -10,6 +10,9 @@ import { useSearchParams } from "next/navigation";
 
 
 export default function PatientCardPageClient() {
+  // Hasta notları için state
+  const [notesOpen, setNotesOpen] = useState(false);
+  const [patientNotes, setPatientNotes] = useState<any[]>([]);
   // Hasta notu güncelleme modalı için state
   const [editNoteModal, setEditNoteModal] = useState(false);
   const [editNoteValue, setEditNoteValue] = useState("");
@@ -60,8 +63,9 @@ export default function PatientCardPageClient() {
       fetch(`https://dentalapi.karadenizdis.com/api/appointment?patient_id=${patientId}`).then(r => r.json()),
       fetch(`https://dentalapi.karadenizdis.com/api/patient/all-doctors-relations`).then(r => r.json()),
       fetch(`https://dentalapi.karadenizdis.com/api/user?role=doctor`).then(r => r.json()),
+      fetch(`https://dentalapi.karadenizdis.com/api/patient-notes/patient/${patientId}`).then(r => r.json()),
     ])
-      .then(async ([p, t, a, tt, ap, rel, docList]) => {
+      .then(async ([p, t, a, tt, ap, rel, docList, notesRes]) => {
         if (!p.success) throw new Error("Hasta bulunamadı");
         setPatient(p.data);
         setTreatments((t.success && t.data) ? t.data : []);
@@ -75,6 +79,12 @@ export default function PatientCardPageClient() {
           names = docList.data.filter((d: any) => patientDoctorIds.includes(d.user_id)).map((d: any) => d.first_name + " " + d.last_name);
         }
         setDoctorNames(names);
+        // Hasta notlarını al ve en yeni en üstte olacak şekilde sırala
+        if (notesRes.success && Array.isArray(notesRes.data)) {
+          setPatientNotes([...notesRes.data].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
+        } else {
+          setPatientNotes([]);
+        }
         setLoading(false);
       })
       .catch(() => {
@@ -542,7 +552,21 @@ export default function PatientCardPageClient() {
                 <div style={{ fontSize: 15, color: "#2d3a4a" }}>TC No: {role === 'doctor' ? '•••' : (patient.tc_number || "-")}</div>
                 <div style={{ fontSize: 15, color: "#2d3a4a" }}>Tel: {role === 'doctor' ? '•••' : (patient.phone || "-")}</div>
                 <div style={{ fontSize: 15, color: "#2d3a4a" }}>Doğum Tarihi: {patient.birth_date ? patient.birth_date.slice(0,10) : "-"}</div>
-                <div style={{ fontSize: 15, color: "#2d3a4a" }}>Notlar: {patient.notes || "-"}</div>
+                {/* Hasta Notları Açılır Alan */}
+                <div style={{ fontSize: 15, color: "#2d3a4a", marginTop: 8, cursor: "pointer", fontWeight: 600 }} onClick={() => setNotesOpen(v => !v)}>
+                  Notlar {notesOpen ? "▲" : "▼"}
+                </div>
+                {notesOpen && (
+                  <div style={{ fontSize: 14, color: "#444", marginLeft: 12, maxHeight: 120, overflowY: "auto", marginTop: 4, border: "1px solid #e5e7eb", borderRadius: 8, padding: 8, background: "#f8fafc" }}>
+                    <ul style={{ margin: 0, padding: 0, listStyle: 'disc inside' }}>
+                      {patientNotes.length === 0 ? <li>Not yok</li> : patientNotes.map((n, i) => (
+                        <li key={n.note_id}>
+                          <span style={{ fontWeight: 600, color: '#1976d2' }}>{new Date(n.created_at).toLocaleString('tr-TR')}</span>: {n.note}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
                 <div style={{ fontSize: 15, color: "#2d3a4a", marginTop: 8, cursor: "pointer", fontWeight: 600 }} onClick={() => setAnamnesisOpen(v => !v)}>
                   Anamnez {anamnesisOpen ? "▲" : "▼"}
                 </div>
