@@ -25,7 +25,7 @@ type Patient = {
   doctor_id?: number;
 };
 
-type PendingItem = {
+ type PendingItem = {
   treatmentTypeId: number;
   treatmentName: string;
   toothNumbers: number[];
@@ -34,7 +34,8 @@ type PendingItem = {
   notes?: string;
   price?: number | null;
   priceDetails?: string | null;
-};
+  doctorId: number;
+ };
 
 function TreatmentAddPageClient() {
   // ...tüm mevcut kodlarınız burada değişmeden kalacak...
@@ -47,12 +48,14 @@ function TreatmentAddPageClient() {
   const [treatmentTypes, setTreatmentTypes] = useState<TreatmentType[]>([]);
 
   const [selectedCategory, setSelectedCategory] = useState<string>("");
-  const [selectedTreatment, setSelectedTreatment] = useState<TreatmentType | null>(
-    null
-  );
+  const [selectedTreatment, setSelectedTreatment] = useState<TreatmentType | null>(null);
+  const [doctors, setDoctors] = useState<{ user_id: number; first_name: string; last_name: string }[]>([]);
+  const [selectedDoctorId, setSelectedDoctorId] = useState<number | null>(null);
   const [selectedTeeth, setSelectedTeeth] = useState<string[]>([]);
   const [toothType, setToothType] = useState<"sürekli" | "süt">("sürekli");
   const [isUpperJawSelected, setIsUpperJawSelected] = useState(false);
+            // Şubedeki doktorları çek
+            // Bu kod artık yukarıdaki useEffect'te doğru şekilde fetch ediliyor
   const [isLowerJawSelected, setIsLowerJawSelected] = useState(false);
   const [notes, setNotes] = useState("");
   const [pending, setPending] = useState<PendingItem[]>([]);
@@ -77,18 +80,28 @@ function TreatmentAddPageClient() {
   useEffect(() => {
     const init = async () => {
       try {
-        try {
-          setRole(localStorage.getItem("role") || "");
-          const userData = localStorage.getItem("user");
-          const authData = localStorage.getItem("auth");
-          const sessionData = sessionStorage.getItem("user");
-          const getB = (o: any) => o?.branchId || o?.branch_id || o?.branchID;
-          let b = 1;
-          if (userData) b = getB(JSON.parse(userData)) || b;
-          if (!b && authData) b = getB(JSON.parse(authData)) || b;
-          if (!b && sessionData) b = getB(JSON.parse(sessionData)) || b;
-          setBranchId(b || 1);
-        } catch {}
+        setRole(localStorage.getItem("role") || "");
+        const userData = localStorage.getItem("user");
+        const authData = localStorage.getItem("auth");
+        const sessionData = sessionStorage.getItem("user");
+        const getB = (o: any) => o?.branchId || o?.branch_id || o?.branchID;
+        let b = 1;
+        if (userData) b = getB(JSON.parse(userData)) || b;
+        if (!b && authData) b = getB(JSON.parse(authData)) || b;
+        if (!b && sessionData) b = getB(JSON.parse(sessionData)) || b;
+        setBranchId(b || 1);
+
+        // Şubedeki doktorları çek
+        let doctorsList: { user_id: number; first_name: string; last_name: string }[] = [];
+        if (b) {
+          const res = await fetch(`https://dentalapi.karadenizdis.com/api/branch/${b}/doctors`);
+          const data = await res.json();
+          if (data.success && Array.isArray(data.data)) {
+            doctorsList = data.data;
+            setDoctors(doctorsList);
+            if (doctorsList.length > 0) setSelectedDoctorId(doctorsList[0].user_id);
+          }
+        }
 
         const [pRes, ttRes] = await Promise.all([
           patientId
@@ -162,7 +175,10 @@ function TreatmentAddPageClient() {
       alert("Lütfen tedavi yapılacak dişleri seçin");
       return;
     }
-
+    if (!selectedDoctorId) {
+      alert("Lütfen bir doktor seçin");
+      return;
+    }
     const item: PendingItem = {
       treatmentTypeId: selectedTreatment.treatment_type_id,
       treatmentName: selectedTreatment.name,
@@ -170,16 +186,15 @@ function TreatmentAddPageClient() {
       isUpperJaw: isUpperJawSelected,
       isLowerJaw: isLowerJawSelected,
       notes,
+      doctorId: selectedDoctorId,
     };
     setPending((p) => [...p, item]);
-
     setSelectedTreatment(null);
     setSelectedTeeth([]);
     setIsUpperJawSelected(false);
     setIsLowerJawSelected(false);
     setNotes("");
-  // Force remount SVG to clear any red fills/selection in the chart
-  setSvgResetKey((k) => k + 1);
+    setSvgResetKey((k) => k + 1);
   };
 
   const handleSuggestAll = async () => {
@@ -196,8 +211,9 @@ function TreatmentAddPageClient() {
       const token = localStorage.getItem("token");
       const userStr = localStorage.getItem("user");
       const user = userStr ? JSON.parse(userStr) : null;
-      const doctorId = user?.user_id || patient?.doctor_id;
       for (const it of pending) {
+        // Tedaviye eklenen doktoru kullan
+        const doctorId = it.doctorId || user?.user_id || patient?.doctor_id;
         const body = {
           patientId: patient.patient_id,
           treatmentTypeId: it.treatmentTypeId,
@@ -661,6 +677,22 @@ function TreatmentAddPageClient() {
           </div>
         )}
 
+        {/* Doktor seçimi alanı */}
+        <div style={{ marginBottom: 16 }}>
+          <label htmlFor="doctor-select" style={{ fontWeight: 700, color: '#0a2972', marginRight: 8 }}>Doktor Seç:</label>
+          <select
+            id="doctor-select"
+            value={selectedDoctorId ?? ''}
+            onChange={e => setSelectedDoctorId(Number(e.target.value))}
+            style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid #e3eafc', fontWeight: 600 }}
+          >
+            {doctors.map(d => (
+              <option key={d.user_id} value={d.user_id}>
+                Dt. {d.first_name} {d.last_name}
+              </option>
+            ))}
+          </select>
+        </div>
         {loading && (
           <div style={{ color: "#1976d2", marginTop: 12 }}>Yükleniyor...</div>
         )}

@@ -120,7 +120,7 @@ function AppointmentCard({ doctor, appointment, onStatusUpdate, role }: Appointm
           borderBottom: "2px solid #e3eafc",
           paddingBottom: 8
         }}>
-          Dr. {doctor.first_name} {doctor.last_name}
+          Dt. {doctor.first_name} {doctor.last_name}
         </div>
         <div style={{ textAlign: "center", color: "#555", padding: "20px 0" }}>
           Sıradaki randevu yok
@@ -157,7 +157,7 @@ function AppointmentCard({ doctor, appointment, onStatusUpdate, role }: Appointm
         borderBottom: "2px solid #e3eafc",
         paddingBottom: 8
       }}>
-        Dr. {doctor.first_name} {doctor.last_name}
+  Dt. {doctor.first_name} {doctor.last_name}
       </div>
       
 
