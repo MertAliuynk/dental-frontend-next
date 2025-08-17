@@ -766,6 +766,12 @@ export default function PatientCardPageClient() {
                               )}
                               <span>
                                 {treatmentName}
+                                {/* Doktor adı küçük ve belirgin şekilde */}
+                                {tr.doctor_name && (
+                                  <span style={{ color: '#1976d2', fontSize: 11, fontWeight: 500, marginLeft: 6 }}>
+                                    • {tr.doctor_name}
+                                  </span>
+                                )}
                                 {jawLabel && (
                                   <span style={{ color: "#666", fontSize: 13 }}> {" "}({jawLabel}{Array.isArray(toothNumbers) && toothNumbers.length > 0 ? ` (${toothNumbers.join(", ")})` : ""})</span>
                                 )}
@@ -848,10 +854,10 @@ export default function PatientCardPageClient() {
                           return (
                             <li key={tr.treatment_id}>
                               {treatmentName}
-                              {/* Doktor adı ekle */}
-                              {tr.doctor_first_name && tr.doctor_last_name && (
-                                <span style={{ color: '#1976d2', fontSize: 12, fontWeight: 600, marginLeft: 6 }}>
-                                  • Dt. {tr.doctor_first_name} {tr.doctor_last_name}
+                              {/* Doktor adı küçük ve belirgin şekilde */}
+                              {tr.doctor_name && (
+                                <span style={{ color: '#1976d2', fontSize: 11, fontWeight: 500, marginLeft: 6 }}>
+                                  • {tr.doctor_name}
                                 </span>
                               )}
                               {Array.isArray(toothNumbers) && toothNumbers.length > 0 && (
