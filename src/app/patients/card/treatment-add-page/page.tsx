@@ -677,42 +677,35 @@ function TreatmentAddPageClient() {
           </div>
         )}
 
-        {/* Doktor seçimi alanı - sayfanın üstüne ve daha belirgin */}
+        {/* Doktor seçimi alanı - diş seçme kısmının üstünde, küçük ve sade */}
         <div style={{
-          marginBottom: 32,
-          padding: '18px 0',
-          background: '#e3eafc',
-          borderRadius: 14,
-          boxShadow: '0 2px 8px #1976d233',
+          marginBottom: 12,
           display: 'flex',
-          flexDirection: 'column',
           alignItems: 'center',
+          gap: 10,
         }}>
           <label htmlFor="doctor-select" style={{
-            fontWeight: 900,
+            fontWeight: 800,
             color: '#0a2972',
-            fontSize: 22,
-            marginBottom: 10,
-            letterSpacing: 0.5,
-            textShadow: '0 1px 4px #fff',
+            fontSize: 15,
+            letterSpacing: 0.2,
+            marginRight: 4,
           }}>
-            Doktor Seçimi
+            Doktor:
           </label>
           <select
             id="doctor-select"
             value={selectedDoctorId ?? ''}
             onChange={e => setSelectedDoctorId(Number(e.target.value))}
             style={{
-              padding: '12px 24px',
-              borderRadius: 10,
-              border: '2px solid #1976d2',
+              padding: '6px 12px',
+              borderRadius: 7,
+              border: '1.5px solid #1976d2',
               fontWeight: 700,
-              fontSize: 20,
+              fontSize: 15,
               color: '#0a2972',
               background: '#fff',
-              boxShadow: '0 1px 6px #1976d233',
               outline: 'none',
-              marginBottom: 4,
               cursor: 'pointer',
             }}
           >
