@@ -623,10 +623,10 @@ export default function PatientCardPageClient() {
                               )}
                               <span>
                                 {treatmentName}
-                                {/* Doktor adı ekle */}
-                                {tr.doctor_first_name && tr.doctor_last_name && (
-                                  <span style={{ color: '#1976d2', fontSize: 12, fontWeight: 600, marginLeft: 6 }}>
-                                    • Dt. {tr.doctor_first_name} {tr.doctor_last_name}
+                                {/* Doktor adı küçük ve belirgin şekilde */}
+                                {tr.doctor_name && (
+                                  <span style={{ color: '#1976d2', fontSize: 11, fontWeight: 500, marginLeft: 6 }}>
+                                    • {tr.doctor_name}
                                   </span>
                                 )}
                                 {jawLabel && (

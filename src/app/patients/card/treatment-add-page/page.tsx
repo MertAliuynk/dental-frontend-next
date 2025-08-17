@@ -327,8 +327,53 @@ function TreatmentAddPageClient() {
 
   return (
     <AppLayout>
-  {/* <Topbar /> kaldırıldı, AppLayout kullanılmalı */}
       <main style={{ flex: 1, padding: 24 }}>
+        {/* Doktor seçimi alanı - sayfanın en üstünde */}
+        <div style={{
+          marginBottom: 20,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+          background: '#f8fafc',
+          borderRadius: 10,
+          padding: '12px 18px',
+          boxShadow: '0 1px 6px #e3eaff33',
+          border: '1.5px solid #b6c6e6',
+          maxWidth: 420,
+        }}>
+          <label htmlFor="doctor-select" style={{
+            fontWeight: 800,
+            color: '#0a2972',
+            fontSize: 15,
+            letterSpacing: 0.2,
+            marginRight: 4,
+          }}>
+            Doktor:
+          </label>
+          <select
+            id="doctor-select"
+            value={selectedDoctorId ?? ''}
+            onChange={e => setSelectedDoctorId(Number(e.target.value))}
+            style={{
+              padding: '6px 12px',
+              borderRadius: 7,
+              border: '1.5px solid #1976d2',
+              fontWeight: 700,
+              fontSize: 15,
+              color: '#0a2972',
+              background: '#fff',
+              outline: 'none',
+              cursor: 'pointer',
+            }}
+          >
+            {doctors.map(d => (
+              <option key={d.user_id} value={d.user_id}>
+                Dt. {d.first_name} {d.last_name}
+              </option>
+            ))}
+          </select>
+        </div>
+        {/* Hasta bilgisi ve tedavi ekleme formu aşağıda */}
         {patient && (
           <div
             style={{
@@ -348,11 +393,9 @@ function TreatmentAddPageClient() {
             </div>
           </div>
         )}
-
         <h2 style={{ color: "#0a2972", fontWeight: 800, marginBottom: 16 }}>
           Tedavi Ekle
         </h2>
-
         <div style={{ display: "flex", gap: 24, alignItems: "flex-start", flexWrap: "wrap" }}>
           <div
             style={{
