@@ -623,6 +623,12 @@ export default function PatientCardPageClient() {
                               )}
                               <span>
                                 {treatmentName}
+                                {/* Doktor adı ekle */}
+                                {tr.doctor_first_name && tr.doctor_last_name && (
+                                  <span style={{ color: '#1976d2', fontSize: 12, fontWeight: 600, marginLeft: 6 }}>
+                                    • Dt. {tr.doctor_first_name} {tr.doctor_last_name}
+                                  </span>
+                                )}
                                 {jawLabel && (
                                   <span style={{ color: "#666", fontSize: 13 }}> {" "}({jawLabel}{Array.isArray(toothNumbers) && toothNumbers.length > 0 ? ` (${toothNumbers.join(", ")})` : ""})</span>
                                 )}
@@ -839,10 +845,15 @@ export default function PatientCardPageClient() {
                           const type = treatmentTypes.find((tt: any) => tt.treatment_type_id === tr.treatment_type_id);
                           const treatmentName = type ? type.name : "Bilinmeyen Tedavi";
                           const toothNumbers = tr.tooth_numbers || tr.toothNumbers || [];
-                          // Onaylanan/önerilenlerdeki gibi: varsa diş(ler) bilgisini tek satırda göster
                           return (
                             <li key={tr.treatment_id}>
                               {treatmentName}
+                              {/* Doktor adı ekle */}
+                              {tr.doctor_first_name && tr.doctor_last_name && (
+                                <span style={{ color: '#1976d2', fontSize: 12, fontWeight: 600, marginLeft: 6 }}>
+                                  • Dt. {tr.doctor_first_name} {tr.doctor_last_name}
+                                </span>
+                              )}
                               {Array.isArray(toothNumbers) && toothNumbers.length > 0 && (
                                 <span style={{ color: "#666", fontSize: 13 }}> (Dişler: {toothNumbers.join(", ")})</span>
                               )}
