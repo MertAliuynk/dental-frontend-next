@@ -328,7 +328,27 @@ function TreatmentAddPageClient() {
   return (
     <AppLayout>
       <main style={{ flex: 1, padding: 24 }}>
-        {/* Doktor seçimi alanı - sayfanın en üstünde */}
+        {/* Hasta bilgisi kartı */}
+        {patient && (
+          <div
+            style={{
+              background: "#fff",
+              borderRadius: 12,
+              boxShadow: "0 2px 8px #0001",
+              padding: 16,
+              marginBottom: 16,
+              border: "1px solid #e5e7eb",
+            }}
+          >
+            <div style={{ fontWeight: 700, color: "#0a2972" }}>
+              {patient.first_name} {patient.last_name}
+            </div>
+            <div style={{ color: "#555", fontSize: 13 }}>
+              TC: {patient.tc_number || "-"} • Tel: {patient.phone || "-"}
+            </div>
+          </div>
+        )}
+        {/* Doktor seçimi alanı - hasta kartının hemen altında */}
         <div style={{
           marginBottom: 20,
           display: 'flex',
@@ -373,26 +393,6 @@ function TreatmentAddPageClient() {
             ))}
           </select>
         </div>
-        {/* Hasta bilgisi ve tedavi ekleme formu aşağıda */}
-        {patient && (
-          <div
-            style={{
-              background: "#fff",
-              borderRadius: 12,
-              boxShadow: "0 2px 8px #0001",
-              padding: 16,
-              marginBottom: 16,
-              border: "1px solid #e5e7eb",
-            }}
-          >
-            <div style={{ fontWeight: 700, color: "#0a2972" }}>
-              {patient.first_name} {patient.last_name}
-            </div>
-            <div style={{ color: "#555", fontSize: 13 }}>
-              TC: {patient.tc_number || "-"} • Tel: {patient.phone || "-"}
-            </div>
-          </div>
-        )}
         <h2 style={{ color: "#0a2972", fontWeight: 800, marginBottom: 16 }}>
           Tedavi Ekle
         </h2>
