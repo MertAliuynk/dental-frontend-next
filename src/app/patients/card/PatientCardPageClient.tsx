@@ -10,6 +10,9 @@ import { useSearchParams } from "next/navigation";
 
 
 export default function PatientCardPageClient() {
+  // Not ekleme modalı için state
+  const [addNoteModal, setAddNoteModal] = useState(false);
+  const [addNoteValue, setAddNoteValue] = useState("");
   // Hasta notları için state
   const [notesOpen, setNotesOpen] = useState(false);
   const [patientNotes, setPatientNotes] = useState<any[]>([]);
@@ -444,6 +447,127 @@ export default function PatientCardPageClient() {
               >
                 Notu Güncelle
               </button>
+              <button
+                style={{
+                  background: "#e3eafc",
+                  color: "#1976d2",
+                  border: "1.5px solid #b6c6e6",
+                  borderRadius: 18,
+                  padding: "8px 24px",
+                  fontWeight: 600,
+                  fontSize: 15,
+                  boxShadow: "0 1px 4px #e3eaff33",
+                  cursor: "pointer",
+                  transition: "background 0.2s",
+                  marginLeft: 8
+                }}
+                className="pc-btn"
+                type="button"
+                onClick={() => setAddNoteModal(true)}
+              >
+                Not Ekle
+              </button>
+      {/* Not Ekleme Modalı */}
+      {addNoteModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999
+        }}>
+          <div style={{
+            background: '#fff',
+            borderRadius: 16,
+            padding: 24,
+            minWidth: 320,
+            maxWidth: 400,
+            boxShadow: '0 4px 24px #0002',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 16
+          }}>
+            <div style={{ fontWeight: 700, fontSize: 18, color: '#1976d2', marginBottom: 8 }}>Yeni Not Ekle</div>
+            <textarea
+              value={addNoteValue}
+              onChange={e => setAddNoteValue(e.target.value)}
+              style={{
+                width: '100%',
+                minHeight: 80,
+                border: '1.5px solid #e3eafc',
+                borderRadius: 8,
+                padding: 10,
+                fontSize: 15,
+                fontFamily: 'inherit',
+                outline: 'none',
+                resize: 'vertical'
+              }}
+              placeholder="Not giriniz..."
+            />
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+              <button
+                style={{
+                  padding: '8px 18px',
+                  background: '#6c757d',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: 8,
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  fontSize: 14
+                }}
+                onClick={() => setAddNoteModal(false)}
+              >
+                İptal
+              </button>
+              <button
+                style={{
+                  padding: '8px 18px',
+                  background: '#1976d2',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: 8,
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  fontSize: 14
+                }}
+                onClick={async () => {
+                  try {
+                    if (!addNoteValue.trim()) {
+                      alert('Not boş olamaz!');
+                      return;
+                    }
+                    const res = await fetch(`https://dentalapi.karadenizdis.com/api/patient-notes`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ patient_id: patient.patient_id, note: addNoteValue })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                      setAddNoteModal(false);
+                      setAddNoteValue("");
+                      // Yeni notu en üste ekle
+                      setPatientNotes(prev => [{ ...data.data }, ...prev]);
+                      alert('Not eklendi!');
+                    } else {
+                      alert(data.message || 'Ekleme başarısız!');
+                    }
+                  } catch (err) {
+                    alert('Sunucu hatası!');
+                  }
+                }}
+              >
+                Kaydet
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
             </div>
       {/* Not Güncelleme Modalı */}
       {editNoteModal && (
