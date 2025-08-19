@@ -1,10 +1,14 @@
 "use client";
 
 <style jsx global>{`
-  .rbc-addons-dnd-resize-anchor {
-    border: none !important;
-    box-shadow: none !important;
-    background: transparent !important;
+  .rbc-addons-dnd-resize-ns-anchor {
+          border: none !important;
+          background: transparent !important;
+        }
+        .rbc-addons-dnd-resize-ew-anchor {
+          border: none !important;
+          background: transparent !important;
+        }
   }
 `}</style>
 
