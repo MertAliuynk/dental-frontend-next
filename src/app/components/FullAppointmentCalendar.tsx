@@ -1,6 +1,13 @@
-  "use client";
-  // ...existing imports and code...
 "use client";
+
+<style jsx global>{`
+  .rbc-addons-dnd-resize-anchor {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+`}</style>
+
 // SMS Gönderme Bölümü Bileşeni
 function SmsSendSection({ createForm, patients, currentUser }: any) {
   const [sending, setSending] = useState(false);
