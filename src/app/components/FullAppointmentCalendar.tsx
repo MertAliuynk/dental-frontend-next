@@ -6,6 +6,7 @@
 // drag&drop ve resize, 15 dk slotlar, saat başı etiketleri, kaynak (resource) sütunları
 
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import PatientSelectModal from './PatientSelectModal';
 import Sidebar from './Sidebar';
 import { Calendar, dateFnsLocalizer, Event } from 'react-big-calendar';
 import withDragAndDrop from 'react-big-calendar/lib/addons/dragAndDrop';
@@ -49,6 +50,9 @@ export default function FullAppointmentCalendar() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [viewDate, setViewDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('day');
+
+  // Hasta seçme modalı için state
+  const [showPatientSelect, setShowPatientSelect] = useState(false);
 
   // Auth & role
   const [user, setUser] = useState<any>(null);
@@ -440,7 +444,11 @@ export default function FullAppointmentCalendar() {
       {sidebarOpen && (
         <div style={{ position: 'fixed', inset: 0 as any, zIndex: 30 }}>
           <div onClick={() => setSidebarOpen(false)} style={{ position: 'absolute', inset: 0 as any, background: 'rgba(0,0,0,0.35)' }} />
-          <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)}/>
+          <Sidebar 
+            open={sidebarOpen} 
+            onClose={() => setSidebarOpen(false)}
+            onOpenPatientSelect={() => setShowPatientSelect(true)}
+          />
         </div>
       )}
 
@@ -708,6 +716,19 @@ export default function FullAppointmentCalendar() {
         <div style={{ position: 'fixed', bottom: 16, right: 16, background: '#111827', color: '#fff', padding: '8px 12px', borderRadius: 8, boxShadow: '0 2px 10px rgba(0,0,0,0.2)' }}>
           Yükleniyor…
         </div>
+      )}
+
+      {/* Hasta seçme modalı */}
+      {showPatientSelect && (
+        <PatientSelectModal 
+          open={showPatientSelect}
+          onClose={() => setShowPatientSelect(false)}
+          onSelect={(id: any) => {
+            // Hasta seçildiğinde yapılacak işlemler
+            setShowPatientSelect(false);
+            // ...buraya hasta seçimi sonrası ek işlemler eklenebilir...
+          }}
+        />
       )}
     </div>
   );
