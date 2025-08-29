@@ -79,8 +79,10 @@ export default function FullAppointmentCalendar() {
     patientOffset: 0,
     patientList: [] as any[],
     selectedPatient: null as any,
+    selectedBranchId: branchId || '', // Şube filtreleme için
   });
   const [branchName, setBranchName] = useState<string>('');
+  const [branches, setBranches] = useState<any[]>([]); // Şube listesi
 
   // Summary modal
   const [showSummary, setShowSummary] = useState(false);
@@ -120,20 +122,22 @@ export default function FullAppointmentCalendar() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [role, user?.user_id]);
 
-  // Load branch name for SMS content
+  // Şubeleri ve branch adını yükle
   useEffect(() => {
-    const loadBranch = async () => {
+    const loadBranches = async () => {
       try {
-        if (!branchId) return;
-  const res = await fetch('https://dentalapi.karadenizdis.com/api/branch');
+        const res = await fetch('https://dentalapi.karadenizdis.com/api/branch');
         const data = await res.json();
         if (data?.success && Array.isArray(data.data)) {
-          const b = data.data.find((x: any) => String(x.branch_id) === String(branchId));
-          if (b) setBranchName(b.name || '');
+          setBranches(data.data);
+          if (branchId) {
+            const b = data.data.find((x: any) => String(x.branch_id) === String(branchId));
+            if (b) setBranchName(b.name || '');
+          }
         }
       } catch {}
     };
-    loadBranch();
+    loadBranches();
   }, [branchId]);
 
   // Compute date range based on view
@@ -298,8 +302,9 @@ export default function FullAppointmentCalendar() {
     params.set('limit', '20');
     params.set('offset', String(offset));
     if (q.trim()) params.set('search', q.trim());
-    if (branchId) params.set('branch_id', String(branchId));
-  const res = await fetch(`https://dentalapi.karadenizdis.com/api/patient?${params.toString()}`);
+    // Şube filtreleme
+    if (createForm.selectedBranchId) params.set('branch_id', String(createForm.selectedBranchId));
+    const res = await fetch(`https://dentalapi.karadenizdis.com/api/patient?${params.toString()}`);
     const data = await res.json();
     if (data?.success) {
       setCreateForm(f => ({ ...f, patientList: offset === 0 ? data.data : [...f.patientList, ...data.data], patientOffset: offset }));
@@ -549,18 +554,32 @@ export default function FullAppointmentCalendar() {
             )}
             <div style={{ marginBottom: 10 }}>
               <div style={{ fontWeight: 900, marginBottom: 6, color: '#0f172a', letterSpacing: '0.5px' }}>Hasta</div>
+              {/* Şube seçici */}
+              <select
+                value={createForm.selectedBranchId}
+                onChange={e => {
+                  setCreateForm(f => ({ ...f, selectedBranchId: e.target.value }));
+                  searchPatients(createForm.patientSearch, 0);
+                }}
+                style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #d1d5db', color: '#0f172a', fontWeight: 700, marginBottom: 8 }}
+              >
+                <option value=''>Tüm Şubeler</option>
+                {branches.map((branch: any) => (
+                  <option key={branch.branch_id} value={branch.branch_id}>{branch.name}</option>
+                ))}
+              </select>
               <input
                 value={createForm.patientSearch}
                 onChange={(e) => { const q = e.target.value; setCreateForm(f => ({ ...f, patientSearch: q })); searchPatients(q, 0); }}
                 placeholder="İsim/TC/Telefon ile ara"
-        style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #d1d5db', color: '#0f172a', fontWeight: 700 }}
+                style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #d1d5db', color: '#0f172a', fontWeight: 700 }}
               />
               {createForm.patientList.length > 0 && (
                 <div style={{ maxHeight: 180, overflow: 'auto', border: '1px solid #e5e7eb', borderRadius: 8, marginTop: 6 }}>
                   {createForm.patientList.map((p: any) => (
                     <div key={p.patient_id} onClick={() => setCreateForm(f => ({ ...f, patientId: String(p.patient_id), patientSearch: `${p.first_name} ${p.last_name} - ${p.phone}` , selectedPatient: p }))} style={{ padding: '8px 10px', cursor: 'pointer' }}>
-          <div style={{ fontWeight: 800, color: '#0f172a' }}>{p.first_name} {p.last_name}</div>
-          <div style={{ fontSize: 12, color: '#0f172a' }}>{p.phone} {p.tc_number ? ` • ${p.tc_number}` : ''}</div>
+                      <div style={{ fontWeight: 800, color: '#0f172a' }}>{p.first_name} {p.last_name}</div>
+                      <div style={{ fontSize: 12, color: '#0f172a' }}>{p.phone} {p.tc_number ? ` • ${p.tc_number}` : ''}</div>
                     </div>
                   ))}
                   <div style={{ padding: 8, borderTop: '1px solid #e5e7eb', display: 'flex', justifyContent: 'center' }}>
