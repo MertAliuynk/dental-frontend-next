@@ -170,96 +170,115 @@ export default function NewPatientPageClient() {
     e.preventDefault();
     setLoading(true);
     setMessage(null);
-    const isEdit = Boolean(editingPatientId);
-    // Zorunlu alan kontrolü (frontend)
-    if (!form.firstName || !form.lastName || !form.phone || !form.birthDate || !Array.isArray(form.doctors) || form.doctors.length === 0) {
-      setMessage("Lütfen tüm hasta bilgilerini ve en az bir doktoru seçin.");
-      setLoading(false);
-      return;
-    }
-    // Sadece yeni hasta eklerken TC zorunlu
-    if (!isEdit) {
-      if (!form.tc) {
-        setMessage("TC Kimlik No zorunlu.");
-        setLoading(false);
-        return;
-      }
-      if (form.tc.length !== 11) {
-        setMessage("TC Kimlik No 11 haneli olmalı.");
-        setLoading(false);
-        return;
-      }
-    }
-    if (form.phone.length !== 10 && form.phone.length !== 11) {
-      setMessage("Telefon numarası 10 veya 11 haneli olmalı.");
-      setLoading(false);
-      return;
-    }
-    try {
-      // Token'ı localStorage'dan al
-      const token = localStorage.getItem('token');
-      const headers: Record<string, string> = { "Content-Type": "application/json" };
-      
-      if (token) {
-        headers.Authorization = `Bearer ${token}`;
-      }
-
-      const isEdit = Boolean(editingPatientId);
-      const url = isEdit ? `https://dentalapi.karadenizdis.com/api/patient/${editingPatientId}` : "https://dentalapi.karadenizdis.com/api/patient";
-      const method = isEdit ? "PUT" : "POST";
-      // Sadece yeni hasta eklerken TC gönder
-      const bodyObj: any = {
-        firstName: form.firstName,
-        lastName: form.lastName,
-        phone: form.phone,
-        doctors: form.doctors,
-        birthDate: form.birthDate,
-        anamnez: form.anamnez
-      };
-      if (!isEdit) {
-        bodyObj.tc = form.tc;
-      }
-      const res = await fetch(url, {
-        method,
-        headers,
-        body: JSON.stringify(bodyObj)
-      });
-      const data = await res.json();
-      if (data.success) {
-        setMessage(isEdit ? "Hasta başarıyla güncellendi!" : "Hasta başarıyla kaydedildi!");
-        if (isEdit) {
-          // Düzenleme sonrası hasta kartına dön
-          router.push(`/patients/card/?id=${editingPatientId}`);
+        const isEdit = Boolean(editingPatientId);
+        if (!form.firstName || !form.lastName || !form.phone || !form.birthDate || !Array.isArray(form.doctors) || form.doctors.length === 0) {
+          setMessage("Lütfen tüm hasta bilgilerini ve en az bir doktoru seçin.");
+          setLoading(false);
           return;
         }
-        setForm({
-          firstName: "",
-          lastName: "",
-          phone: "",
-          tc: "",
-          doctors: [],
-          birthDate: "",
-          anamnez: {
-            tedavi: "",
-            hastalik: "",
-            hastalikList: false,
-            radyoterapi: "",
-            kanama: "",
-            ilacAlerji: "",
-            digerSorun: "",
-            kadinBilgi: "",
-            kotuAliskanlik: "",
-            disMuayene: ""
+        // Sadece yeni hasta eklerken TC zorunlu
+        if (!isEdit) {
+          if (!form.tc) {
+            setMessage("TC Kimlik No zorunlu.");
+            setLoading(false);
+            return;
           }
-        });
-      } else {
-        setMessage(data.message || "Kayıt sırasında hata oluştu.");
-      }
-    } catch (err) {
-      setMessage("Sunucu hatası. Lütfen tekrar deneyin.");
-    } finally {
-      setLoading(false);
-    }
+          if (form.tc.length !== 11) {
+            setMessage("TC Kimlik No 11 haneli olmalı.");
+            setLoading(false);
+            return;
+          }
+        }
+        if (form.phone.length !== 10 && form.phone.length !== 11) {
+          setMessage("Telefon numarası 10 veya 11 haneli olmalı.");
+          setLoading(false);
+          return;
+        }
+        try {
+          // Token'ı localStorage'dan al
+          const token = localStorage.getItem('token');
+          const headers: Record<string, string> = { "Content-Type": "application/json" };
+          if (token) {
+            headers.Authorization = `Bearer ${token}`;
+          }
+          if (isEdit) {
+            // Hasta bilgilerini güncelle
+            const url = `https://dentalapi.karadenizdis.com/api/patient/${editingPatientId}`;
+            const bodyObj: any = {
+              firstName: form.firstName,
+              lastName: form.lastName,
+              phone: form.phone,
+              birthDate: form.birthDate,
+              anamnez: form.anamnez
+            };
+            const res = await fetch(url, {
+              method: "PUT",
+              headers,
+              body: JSON.stringify(bodyObj)
+            });
+            const data = await res.json();
+            if (data.success) {
+              // Doktor ilişkilerini güncelle
+              await fetch(`https://dentalapi.karadenizdis.com/api/patient/${editingPatientId}/doctors`, {
+                method: "POST",
+                headers,
+                body: JSON.stringify({ doctorIds: form.doctors.map(Number) })
+              });
+              setMessage("Hasta başarıyla güncellendi!");
+              router.push(`/patients/card/?id=${editingPatientId}`);
+              return;
+            } else {
+              setMessage(data.message || "Kayıt sırasında hata oluştu.");
+            }
+          } else {
+            // Yeni hasta ekle
+            const url = "https://dentalapi.karadenizdis.com/api/patient";
+            const bodyObj: any = {
+              firstName: form.firstName,
+              lastName: form.lastName,
+              phone: form.phone,
+              doctors: form.doctors,
+              birthDate: form.birthDate,
+              anamnez: form.anamnez,
+              tc: form.tc
+            };
+            const res = await fetch(url, {
+              method: "POST",
+              headers,
+              body: JSON.stringify(bodyObj)
+            });
+            const data = await res.json();
+            if (data.success) {
+              setMessage("Hasta başarıyla kaydedildi!");
+              setForm({
+                firstName: "",
+                lastName: "",
+                phone: "",
+                tc: "",
+                doctors: [],
+                birthDate: "",
+                anamnez: {
+                  tedavi: "",
+                  hastalik: "",
+                  hastalikList: false,
+                  radyoterapi: "",
+                  kanama: "",
+                  ilacAlerji: "",
+                  digerSorun: "",
+                  kadinBilgi: "",
+                  kotuAliskanlik: "",
+                  disMuayene: ""
+                }
+              });
+            } else {
+              setMessage(data.message || "Kayıt sırasında hata oluştu.");
+            }
+          }
+        } catch (err) {
+          setMessage("Sunucu hatası. Lütfen tekrar deneyin.");
+        } finally {
+          setLoading(false);
+        }
   };
 
   return (

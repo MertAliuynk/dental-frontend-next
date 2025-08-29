@@ -14,10 +14,8 @@ const FullAppointmentCalendar = dynamic(
 
 export default function CalendarPage() {
   return (
-    <AppLayout>
       <Suspense fallback={<div style={{ padding: '40px', textAlign: 'center' }}>Yükleniyor...</div>}>
         <FullAppointmentCalendar />
       </Suspense>
-    </AppLayout>
   );
 }

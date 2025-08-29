@@ -47,6 +47,7 @@ interface Branch {
 }
 
 export default function MiniAppointmentCalendar() {
+  const [selectedAppointment, setSelectedAppointment] = useState<any | null>(null);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [selectedBranchId, setSelectedBranchId] = useState<number>(1);
   const [doctorAppointments, setDoctorAppointments] = useState<{[key: number]: any[]}>({});
@@ -168,9 +169,11 @@ export default function MiniAppointmentCalendar() {
             start: new Date(item.appointment_time),
             end: new Date(new Date(item.appointment_time).getTime() + (item.duration_minutes || 30) * 60000),
             id: item.appointment_id,
+            patient_id: item.patient_id,
             patient_name: item.patient_name,
             patient_first_name: item.patient_first_name,
             patient_last_name: item.patient_last_name,
+            patient_phone: item.patient_phone,
             notes: item.notes
           }));
         return mapped;
@@ -239,16 +242,23 @@ export default function MiniAppointmentCalendar() {
       </div>
 
       {/* Doktor başına ayrı takvimler */}
-  <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }}>
+      <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }}>
         {doctors.map((doctor) => (
           <div key={doctor.user_id} style={{ 
             border: "2px solid #e3eafc", 
             borderRadius: 8, 
             padding: 12,
-            background: "#fafbff"
+            background: "#fafbff",
+            cursor: "pointer"
+          }} onClick={(e) => {
+            // Sadece event'e tıklanınca değil, kartın her yerine tıklanınca açılır
+            // Tıklanan event'i bulmak için calendar'ın events'ını kullan
+            // Calendar'ın event componenti de tıklamayı tetikler
+            // Sadece event'e tıklanırsa props.event gelir, kartın dışına tıklanırsa bir şey gelmez
+            // Bu yüzden calendar'ın event componentinde setSelectedAppointment çağrısı devam edecek
           }}>
             <div style={{ 
-              fontWeight: 600, 
+              fontWeight: 700, 
               marginBottom: 8, 
               textAlign: "center", 
               color: "#1a237e", 
@@ -256,58 +266,144 @@ export default function MiniAppointmentCalendar() {
             }}>
               Dt. {doctor.first_name} {doctor.last_name}
             </div>
-      <div style={{ width: "100%", overflowX: "auto" }}>
-  <Calendar
-              localizer={localizer}
-              events={doctorAppointments[doctor.user_id] || []}
-              defaultView="day"
-              views={["day"]}
-              min={new Date(new Date().setHours(9, 0, 0, 0))}
-              max={new Date(new Date().setHours(23, 59, 0, 0))}
-              step={15}
-              timeslots={1}
-              className="mini-calendar-custom-slots"
-              style={{
-                height: 450, // Yüksekliği daha da artırıldı
-                minWidth: 360,
-                width: "100%",
-                background: "white",
-                borderRadius: 6,
-                fontSize: 12,
-                color: "#222"
-              }}
-              toolbar={false}
-              showAllEvents={false}
-              formats={{
-                timeGutterFormat: (date) => {
-                  // Sadece saat başlarında saat göster
-                  const minutes = date.getMinutes();
-                  return minutes === 0 ? format(date, 'HH:mm', { locale: tr }) : '';
-                },
-                eventTimeRangeFormat: ({ start, end }) => `${format(start, 'HH:mm', { locale: tr })} - ${format(end, 'HH:mm', { locale: tr })}`
-              }}
-              eventPropGetter={(event) => ({
-                style: {
-                  border: '2px solid #1976d2',
-                  borderRadius: '8px',
-                  background: '#fff',
-                  color: '#222',
-                  fontWeight: 600,
-                  padding: '2px 8px',
-                  boxShadow: '0 1px 4px #e3eaff33',
-                  fontSize: '13px',
-                  marginBottom: '4px',
-                  zIndex: 1
-                }
-              })}
-              components={{
-                event: MiniCalendarEvent
-              }}
-/>
-      </div>
+            <div style={{ width: "100%", overflowX: "auto" }}>
+              <Calendar
+                localizer={localizer}
+                events={doctorAppointments[doctor.user_id] || []}
+                defaultView="day"
+                views={["day"]}
+                min={new Date(new Date().setHours(9, 0, 0, 0))}
+                max={new Date(new Date().setHours(23, 59, 0, 0))}
+                step={15}
+                timeslots={1}
+                className="mini-calendar-custom-slots"
+                style={{
+                  height: 450,
+                  minWidth: 360,
+                  width: "100%",
+                  background: "white",
+                  borderRadius: 6,
+                  fontSize: 12,
+                  color: "#222"
+                }}
+                toolbar={false}
+                showAllEvents={false}
+                formats={{
+                  timeGutterFormat: (date) => {
+                    const minutes = date.getMinutes();
+                    return minutes === 0 ? format(date, 'HH:mm', { locale: tr }) : '';
+                  },
+                  eventTimeRangeFormat: ({ start, end }) => `${format(start, 'HH:mm', { locale: tr })} - ${format(end, 'HH:mm', { locale: tr })}`
+                }}
+                eventPropGetter={(event) => ({
+                  style: {
+                    border: '2px solid #1976d2',
+                    borderRadius: '8px',
+                    background: '#fff',
+                    color: '#222',
+                    fontWeight: 700,
+                    padding: '2px 8px',
+                    boxShadow: '0 1px 4px #e3eaff33',
+                    fontSize: '13px',
+                    marginBottom: '4px',
+                    zIndex: 1
+                  }
+                })}
+                components={{
+                  event: (props: any) => (
+                    <div style={{ cursor: "pointer" }} onClick={() => setSelectedAppointment(props.event)}>
+                      <MiniCalendarEvent {...props} />
+                    </div>
+                  )
+                }}
+              />
+            </div>
           </div>
         ))}
       </div>
+
+      {/* Randevu özeti kartı */}
+      {selectedAppointment && (
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          width: "100vw",
+          height: "100vh",
+          background: "rgba(30, 42, 80, 0.18)",
+          zIndex: 9999,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center"
+        }} onClick={() => setSelectedAppointment(null)}>
+          <div style={{
+            background: "#f7f9fc",
+            borderRadius: 18,
+            boxShadow: "0 4px 32px #1a237e22",
+            padding: 36,
+            minWidth: 340,
+            maxWidth: 420,
+            outline: "none",
+            border: "1px solid #e3eafc",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center"
+          }} onClick={e => e.stopPropagation()}>
+            <div style={{ fontWeight: 900, fontSize: 24, marginBottom: 18, color: "#1976d2", letterSpacing: 1 }}>
+              Randevu Özeti
+            </div>
+            <div style={{
+              width: 64,
+              height: 64,
+              borderRadius: "50%",
+              background: "#e3eafc",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              marginBottom: 16
+            }}>
+              <span style={{ fontWeight: 900, fontSize: 28, color: "#1976d2" }}>
+                {selectedAppointment.patient_name?.charAt(0) || selectedAppointment.patient_first_name?.charAt(0) || "?"}
+              </span>
+            </div>
+            <div
+              style={{ marginBottom: 6, fontWeight: 700, fontSize: 18, color: "#1976d2", textAlign: "center", cursor: "pointer", textDecoration: "underline" }}
+              onClick={() => {
+                if (selectedAppointment.patient_id) {
+                  window.location.href = `http://localhost:3000/patients/card?id=${selectedAppointment.patient_id}`;
+                }
+              }}
+              title="Hasta kartını görüntüle"
+            >
+              {selectedAppointment.patient_name || `${selectedAppointment.patient_first_name || ""} ${selectedAppointment.patient_last_name || ""}`}
+            </div>
+            <div style={{ marginBottom: 12, fontWeight: 600, fontSize: 15, color: "#1976d2", textAlign: "center", letterSpacing: 1 }}>
+              {format(new Date(selectedAppointment.start), 'HH:mm', { locale: tr })} - {format(new Date(selectedAppointment.end), 'HH:mm', { locale: tr })}
+            </div>
+            <div style={{ marginBottom: 10, fontWeight: 900, fontSize: 16, color: "#222", width: "100%", textAlign: "left" }}>
+              <span style={{ color: "#1976d2" }}>Telefon:</span> {selectedAppointment.patient_phone || selectedAppointment.phone || "-"}
+            </div>
+            <div style={{ marginBottom: 10, fontWeight: 900, fontSize: 16, color: "#222", width: "100%", textAlign: "left" }}>
+              <span style={{ color: "#1976d2" }}>Not:</span> {selectedAppointment.notes || "-"}
+            </div>
+            <button
+              style={{
+                marginTop: 18,
+                padding: "10px 28px",
+                background: "#1976d2",
+                color: "#fff",
+                border: "none",
+                borderRadius: 8,
+                fontWeight: 700,
+                fontSize: 16,
+                cursor: "pointer",
+                boxShadow: "0 2px 8px #1976d233"
+              }}
+              onClick={() => setSelectedAppointment(null)}
+            >Kapat</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
