@@ -3,6 +3,7 @@
 
 
 import AppLayout from "../../components/AppLayout";
+import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 // import Topbar kaldırıldı
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -10,6 +11,22 @@ import { useSearchParams } from "next/navigation";
 
 
 export default function PatientCardPageClient() {
+  // Türkçe karakterleri Latin harfe çeviren fonksiyon
+  const sanitizeText = (text: string) =>
+    text
+      .replace(/ı/g, "i")
+      .replace(/İ/g, "I")
+      .replace(/ş/g, "s")
+      .replace(/Ş/g, "S")
+      .replace(/ğ/g, "g")
+      .replace(/Ğ/g, "G")
+      .replace(/ü/g, "u")
+      .replace(/Ü/g, "U")
+      .replace(/ö/g, "o")
+      .replace(/Ö/g, "O")
+      .replace(/ç/g, "c")
+      .replace(/Ç/g, "C");
+  const [printModalOpen, setPrintModalOpen] = useState(false);
   // Not ekleme modalı için state
   const [addNoteModal, setAddNoteModal] = useState(false);
   const [addNoteValue, setAddNoteValue] = useState("");
@@ -428,25 +445,127 @@ export default function PatientCardPageClient() {
               >
                 Onam Formu Oluştur
               </button>
-              <button
-                style={{
-                  background: "#fffbe6",
-                  color: "#b68c00",
-                  border: "1.5px solid #e6e6b6",
-                  borderRadius: 18,
-                  padding: "8px 24px",
-                  fontWeight: 600,
-                  fontSize: 15,
-                  boxShadow: "0 1px 4px #e3eaff33",
-                  cursor: "pointer",
-                  transition: "background 0.2s"
-                }}
-                className="pc-btn"
-                type="button"
-                onClick={() => setEditNoteModal(true)}
-              >
-                Notu Güncelle
+                <button
+                  style={{
+                    background: "#eaf1fb",
+                    color: "#0a2972",
+                    border: "1.5px solid #b6c6e6",
+                    borderRadius: 18,
+                    padding: "8px 24px",
+                    fontWeight: 600,
+                    fontSize: 15,
+                    boxShadow: "0 1px 4px #e3eaff33",
+                    cursor: "pointer",
+                    transition: "background 0.2s"
+                  }}
+                  className="pc-btn"
+                  type="button"
+                  aria-label="Yazdır"
+                  onClick={() => setPrintModalOpen(true)}
+                >
+                  Yazdır
+                </button>
+      {/* Yazdır onay modalı */}
+      {printModalOpen && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(0,0,0,0.25)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ background: "#fff", borderRadius: 12, padding: 32, minWidth: 320, boxShadow: "0 2px 16px #0002", textAlign: "center" }}>
+            <h3 style={{ fontWeight: 800, fontSize: 22, marginBottom: 18, color: "#0a2972" }}>PDF Olarak Yazdır</h3>
+            <div style={{ fontSize: 17, marginBottom: 24, fontWeight: 700, color: '#0a2972', letterSpacing: 0.2 }}>Hastaya önerilen, onaylanan ve tamamlanan tedaviler PDF olarak indirilecek.<br />Onaylıyor musunuz?</div>
+            <div style={{ display: "flex", gap: 16, justifyContent: "center" }}>
+              <button style={{ background: "#eaf1fb", color: "#0a2972", border: "1.5px solid #b6c6e6", borderRadius: 8, padding: "8px 24px", fontWeight: 600, fontSize: 15, cursor: "pointer" }} onClick={async () => {
+                setPrintModalOpen(false);
+                // PDF oluştur ve indir
+                const doc = await PDFDocument.create();
+                const font = await doc.embedFont(StandardFonts.Helvetica);
+                const page = doc.addPage([595, 842]); // A4
+                // Logo benzeri simge
+                page.drawCircle({ x: 60, y: 820, size: 18, color: rgb(0.1,0.3,0.6) });
+                page.drawText(sanitizeText("Karadeniz Dis Agiz ve Dis Sagligi Poliklinigi"), { x: 90, y: 820, size: 13, font, color: rgb(0.1,0.3,0.6) });
+                page.drawText(sanitizeText("Tedavi Raporu"), { x: 90, y: 800, size: 13, font, color: rgb(0.05,0.15,0.45) });
+                page.drawText(sanitizeText(`Tarih: ${new Date().toLocaleDateString()}`), { x: 420, y: 820, size: 10, font, color: rgb(0.1,0.3,0.6) });
+                page.drawText(sanitizeText(`Hasta: ${patient?.first_name || ""} ${patient?.last_name || ""}`), { x: 420, y: 800, size: 12, font, color: rgb(0.05,0.15,0.45) });
+                // Ayraç çizgisi
+                page.drawLine({ start: { x: 40, y: 790 }, end: { x: 555, y: 790 }, color: rgb(0.7,0.8,0.9), thickness: 2 });
+                // Doktorlar
+                let y = 770;
+                page.drawRectangle({ x: 50, y: y-2, width: 490, height: 20, color: rgb(0.93,0.96,0.99), borderColor: rgb(0.1,0.3,0.6), borderWidth: 1 });
+                page.drawText(sanitizeText("Tedaviye Katkı Sağlayan Doktorlar"), { x: 55, y: y+2, size: 13, font, color: rgb(0.1,0.3,0.6) });
+                y -= 18;
+                doctorNames.forEach((name: string) => {
+                  page.drawRectangle({ x: 50, y: y-2, width: 490, height: 14, color: rgb(0.98,0.98,1), borderColor: rgb(0.8,0.85,0.95), borderWidth: 1 });
+                  page.drawText(sanitizeText(name), { x: 60, y: y+2, size: 11, font, color: rgb(0,0,0) });
+                  y -= 14;
+                });
+                y -= 10;
+                // Tedavi tabloları
+                const drawTable = (title: string, items: any[]) => {
+                  // Tablo başlığı kutusu (koyu arka plan, beyaz yazı)
+                  page.drawRectangle({ x: 50, y: y-2, width: 490, height: 22, color: rgb(0.1,0.3,0.6), borderColor: rgb(0.1,0.3,0.6), borderWidth: 1 });
+                  page.drawText(sanitizeText(title), { x: 55, y: y+2, size: 14, font, color: rgb(1,1,1) });
+                  y -= 24;
+                  // Kolon başlıkları (gri arka plan, koyu yazı)
+                  page.drawRectangle({ x: 50, y: y-2, width: 490, height: 18, color: rgb(0.93,0.96,0.99), borderColor: rgb(0.8,0.85,0.95), borderWidth: 1 });
+                  // Kolon dikey çizgileri
+                  page.drawLine({ start: { x: 170, y: y-2 }, end: { x: 170, y: y+16 }, color: rgb(0.7,0.8,0.9), thickness: 1 });
+                  page.drawLine({ start: { x: 300, y: y-2 }, end: { x: 300, y: y+16 }, color: rgb(0.7,0.8,0.9), thickness: 1 });
+                  page.drawLine({ start: { x: 400, y: y-2 }, end: { x: 400, y: y+16 }, color: rgb(0.7,0.8,0.9), thickness: 1 });
+                  page.drawText(sanitizeText("Tedavi Adı"), { x: 60, y: y+2, size: 12, font, color: rgb(0.1,0.3,0.6) });
+                  page.drawText(sanitizeText("Diş No"), { x: 220, y: y+2, size: 12, font, color: rgb(0.1,0.3,0.6) });
+                  page.drawText(sanitizeText("Doktor"), { x: 320, y: y+2, size: 12, font, color: rgb(0.1,0.3,0.6) });
+                  page.drawText(sanitizeText("Durum"), { x: 420, y: y+2, size: 12, font, color: rgb(0.1,0.3,0.6) });
+                  y -= 18;
+                  // Satırlar
+                  items.forEach((tr: any, idx: number) => {
+                    const teeth = tr.tooth_numbers || tr.toothNumbers || [];
+                    let doctorName = "-";
+                    if (tr.doctor_id && Array.isArray(doctorNames) && doctorNames.length > 0) {
+                      doctorName = doctorNames.find(name => name.includes(tr.doctor_name || "")) || tr.doctor_name || "-";
+                    } else if (tr.doctor_name) {
+                      doctorName = tr.doctor_name;
+                    }
+                    // Alternatif arka plan ve kenarlık
+                    page.drawRectangle({ x: 50, y: y-2, width: 490, height: 16, color: idx%2===0 ? rgb(0.98,0.98,1) : rgb(0.93,0.96,0.99), borderColor: rgb(0.8,0.85,0.95), borderWidth: 1 });
+                    // Satır dikey çizgileri
+                    page.drawLine({ start: { x: 170, y: y-2 }, end: { x: 170, y: y+14 }, color: rgb(0.7,0.8,0.9), thickness: 1 });
+                    page.drawLine({ start: { x: 300, y: y-2 }, end: { x: 300, y: y+14 }, color: rgb(0.7,0.8,0.9), thickness: 1 });
+                    page.drawLine({ start: { x: 400, y: y-2 }, end: { x: 400, y: y+14 }, color: rgb(0.7,0.8,0.9), thickness: 1 });
+                    page.drawText(sanitizeText(tr.treatment_type_name || tr.name || "Tedavi"), { x: 60, y: y+2, size: 9, font, color: rgb(0,0,0) });
+                    page.drawText(sanitizeText(Array.isArray(teeth) && teeth.length > 0 ? teeth.join(", ") : "-"), { x: 220, y: y+2, size: 9, font, color: rgb(0,0,0) });
+                    page.drawText(sanitizeText(doctorName), { x: 320, y: y+2, size: 9, font, color: rgb(0,0,0) });
+                    page.drawText(sanitizeText(tr.status), { x: 420, y: y+2, size: 9, font, color: rgb(0,0,0) });
+                    y -= 16;
+                  });
+                  y -= 10;
+                };
+                drawTable("Önerilen Tedaviler", suggestedTreatments);
+                drawTable("Onaylanan Tedaviler", approvedTreatments);
+                drawTable("Tamamlanan Tedaviler", completedTreatments);
+                // Alt açıklama ve imza
+                page.drawLine({ start: { x: 40, y: 120 }, end: { x: 555, y: 120 }, color: rgb(0.1,0.3,0.6), thickness: 2 });
+                page.drawText(sanitizeText("Bu belge Karadeniz Diş Kliniği tarafından resmi olarak düzenlenmiştir."), { x: 55, y: 100, size: 12, font, color: rgb(0.1,0.3,0.6) });
+                page.drawText(sanitizeText("İmza: .................................................."), { x: 55, y: 70, size: 13, font, color: rgb(0,0,0) });
+                const pdfBytes = await doc.save();
+                const blob = new Blob([new Uint8Array(pdfBytes)], { type: "application/pdf" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `hasta-tedavi-listesi.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => {
+                  document.body.removeChild(a);
+                  URL.revokeObjectURL(url);
+                }, 500);
+              }}>
+                Onayla ve İndir
               </button>
+              <button style={{ background: "#fbeaea", color: "#b91c1c", border: "1.5px solid #e6b6b6", borderRadius: 8, padding: "8px 24px", fontWeight: 600, fontSize: 15, cursor: "pointer" }} onClick={() => setPrintModalOpen(false)}>
+                Vazgeç
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
               <button
                 style={{
                   background: "#e3eafc",

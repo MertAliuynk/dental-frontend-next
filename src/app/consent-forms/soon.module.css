@@ -1,0 +1,137 @@
+.loadingSoonWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 32px;
+}
+.loadingTooth {
+  width: 64px;
+  height: 64px;
+  position: relative;
+  animation: toothBounce 1.2s infinite cubic-bezier(.77,0,.18,1);
+}
+.toothBody {
+  width: 64px;
+  height: 48px;
+  background: #fff;
+  border-radius: 32px 32px 40px 40px / 32px 32px 48px 48px;
+  border: 2.5px solid #b6c6e6;
+  box-shadow: 0 2px 12px #b6c6e6aa;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+}
+.toothSmile {
+  position: absolute;
+  left: 18px;
+  bottom: 12px;
+  width: 28px;
+  height: 10px;
+  border-bottom: 2px solid #1976d2;
+  border-radius: 0 0 14px 14px;
+}
+.toothEyes {
+  position: absolute;
+  top: 18px;
+  left: 16px;
+  width: 32px;
+  height: 12px;
+  display: flex;
+  justify-content: space-between;
+}
+.toothEyes::before, .toothEyes::after {
+  content: '';
+  display: block;
+  width: 7px;
+  height: 7px;
+  background: #1976d2;
+  border-radius: 50%;
+  margin-top: 2px;
+}
+.loadingText {
+  font-size: 18px;
+  color: #1976d2;
+  font-weight: 700;
+  margin-top: 18px;
+  letter-spacing: 1px;
+  animation: fadeIn 1.2s cubic-bezier(.77,0,.18,1);
+}
+@keyframes toothBounce {
+  0% { transform: translateY(0); }
+  30% { transform: translateY(-18px); }
+  50% { transform: translateY(0); }
+  70% { transform: translateY(-8px); }
+  100% { transform: translateY(0); }
+}
+.soonContainer {
+  background: linear-gradient(120deg, #eaf1fb 0%, #f5f6fa 100%);
+  border-radius: 24px;
+  box-shadow: 0 4px 32px #0002;
+  padding: 56px 36px;
+  text-align: center;
+  max-width: 480px;
+  border: 2px solid #b6c6e6;
+  position: relative;
+  overflow: hidden;
+}
+.soonTitle {
+  font-size: 38px;
+  font-weight: 900;
+  color: #0a2972;
+  margin-bottom: 18px;
+  letter-spacing: 1px;
+  animation: fadeInDown 1s cubic-bezier(.77,0,.18,1) forwards;
+}
+.soonSubtitle {
+  font-size: 20px;
+  color: #1976d2;
+  font-weight: 600;
+  margin-bottom: 16px;
+  animation: fadeIn 1.2s 0.3s cubic-bezier(.77,0,.18,1) forwards;
+}
+.soonDesc {
+  font-size: 16px;
+  color: #555;
+  margin-top: 10px;
+  animation: fadeIn 1.2s 0.6s cubic-bezier(.77,0,.18,1) forwards;
+}
+.soonGlow {
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 320px;
+  height: 120px;
+  background: radial-gradient(circle, #b6c6e6 0%, transparent 70%);
+  opacity: 0.5;
+  filter: blur(16px);
+  pointer-events: none;
+  animation: glowPulse 2.5s infinite alternate;
+}
+.soonWave {
+  position: absolute;
+  bottom: -18px;
+  left: 0;
+  width: 100%;
+  height: 38px;
+  background: url('data:image/svg+xml;utf8,<svg width="100%" height="38" viewBox="0 0 480 38" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M0 19C80 38 160 0 240 19C320 38 400 0 480 19V38H0V19Z" fill="%23b6c6e6" fill-opacity="0.18"/></svg>');
+  background-size: cover;
+  animation: waveMove 3s linear infinite;
+}
+@keyframes fadeInDown {
+  0% { opacity: 0; transform: translateY(-40px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+@keyframes glowPulse {
+  0% { opacity: 0.5; }
+  100% { opacity: 0.8; }
+}
+@keyframes waveMove {
+  0% { background-position-x: 0; }
+  100% { background-position-x: 480px; }
+}
