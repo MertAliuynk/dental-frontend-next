@@ -440,7 +440,7 @@ export default function FullAppointmentCalendar() {
       {sidebarOpen && (
         <div style={{ position: 'fixed', inset: 0 as any, zIndex: 30 }}>
           <div onClick={() => setSidebarOpen(false)} style={{ position: 'absolute', inset: 0 as any, background: 'rgba(0,0,0,0.35)' }} />
-          <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} asDrawer />
+          <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)}/>
         </div>
       )}
 
