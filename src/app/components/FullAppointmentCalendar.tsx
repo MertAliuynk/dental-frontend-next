@@ -1,3 +1,4 @@
+
 // Diş Kliniği Randevu Takvimi - Sıfırdan modern ve bol yorumlu
 // Gereksinimler: rol tabanlı görünüm, canlı veri, doktor renkleri, responsive tasarım
 
@@ -7,6 +8,7 @@
 
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import PatientSelectModal from './PatientSelectModal';
+import AddPatientModal from './AddPatientModal';
 import Sidebar from './Sidebar';
 import { Calendar, dateFnsLocalizer, Event } from 'react-big-calendar';
 import withDragAndDrop from 'react-big-calendar/lib/addons/dragAndDrop';
@@ -46,6 +48,8 @@ const DnDCalendar = withDragAndDrop(Calendar);
 type Role = 'doctor' | 'admin' | 'manager' | 'receptionist' | string;
 
 export default function FullAppointmentCalendar() {
+  // Hasta ekleme modalı için state
+  const [showAddPatient, setShowAddPatient] = useState(false);
   // UI state
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [viewDate, setViewDate] = useState(new Date());
@@ -69,6 +73,43 @@ export default function FullAppointmentCalendar() {
 
   // Create modal
   const [showCreate, setShowCreate] = useState(false);
+  const appointmentTypes = [
+    'Muayene',
+    'Özel',
+    'Kontrol',
+    'İmplant',
+    'Protez',
+    'Peridontoloji',
+    'Pedodonti',
+    'Dolgu',
+    'Kanal Tedavisi',
+    'Beyazlatma',
+    'Ölçü',
+    'İmplant üstü ölçü',
+    'altyapı prova',
+    'dentin prova',
+    'protez bitim',
+    'diş kesimi',
+    'vuruk alma',
+    'çekim',
+    'iyileştirme başlığı',
+    'botoks',
+    'gece plağı',
+    'abutment takımı',
+    'metal prova',
+    'geçici',
+    'dikiş alımı',
+    'implant kontrol filmi',
+    'kaplama sökümü',
+    'fiber-metal post',
+    'kanal pansuman',
+    'gömülü çekim',
+    'cerrahi çekim',
+    'genel anestezi',
+    'zirkonyum kor prova',
+    'rezin prova',
+    'simantasyon'
+  ];
   const [createForm, setCreateForm] = useState({
     doctorId: '',
     patientId: '',
@@ -80,6 +121,8 @@ export default function FullAppointmentCalendar() {
     patientList: [] as any[],
     selectedPatient: null as any,
     selectedBranchId: branchId || '', // Şube filtreleme için
+    appointmentType: '',
+    showTypeDropdown: false,
   });
   const [branchName, setBranchName] = useState<string>('');
   const [branches, setBranches] = useState<any[]>([]); // Şube listesi
@@ -314,15 +357,24 @@ export default function FullAppointmentCalendar() {
   const createAppointment = async () => {
     if (!createForm.when || !createForm.patientId || !(role === 'doctor' ? user?.user_id : createForm.doctorId)) return;
     const doctorId = role === 'doctor' ? String(user.user_id) : createForm.doctorId;
+    // Notu formatla: önce tür, sonra '-', sonra girilen not
+    let notes = '';
+    if (createForm.appointmentType) {
+      notes = createForm.appointmentType;
+    }
+    if (notes) {
+      notes += ' - ';
+    }
+    notes += createForm.notes || '';
     try {
-  const res = await fetch('https://dentalapi.karadenizdis.com/api/appointment', {
+      const res = await fetch('https://dentalapi.karadenizdis.com/api/appointment', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           patientId: createForm.patientId,
           doctorId,
           appointmentTime: createForm.when.toISOString(),
           duration: createForm.duration,
-          notes: createForm.notes,
+          notes,
           branchId,
         })
       });
@@ -330,6 +382,8 @@ export default function FullAppointmentCalendar() {
       if (res.ok && data?.success) {
         setShowCreate(false);
         fetchAppointments();
+        // Sonraki oluşturma için notu sıfırla
+        setCreateForm(f => ({ ...f, notes: '' }));
       } else {
         alert(data?.message || 'Randevu oluşturulamadı');
       }
@@ -409,11 +463,44 @@ export default function FullAppointmentCalendar() {
       {/* Top bar */}
       <div style={{ position: 'sticky', top: 0, zIndex: 20, background: '#fff', borderBottom: '1px solid #e5e7eb', overflowX: 'auto', maxWidth: '100vw', boxSizing: 'border-box' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', flexWrap: 'wrap', minWidth: 260, maxWidth: '100vw', boxSizing: 'border-box' }}>
+          
           <button aria-label="menu" onClick={() => setSidebarOpen(true)} style={{ width: 40, height: 40, borderRadius: 10, border: '2px solid #1f3755', background: '#1f3755', color: '#fff', cursor: 'pointer', fontWeight: 900 }}>
             ☰
           </button>
           <div style={{ fontWeight: 800, fontSize: 20, color: '#1f3755' }}>Randevu Takvimi</div>
           <div style={{ flex: 1 }} />
+          
+
+          {/* Günlük görünümde ortada Türkçe tarih gösterimi */}
+          {viewMode === 'day' && (
+            <div style={{ flex: 2, textAlign: 'center', fontWeight: 900, fontSize: 22, color: '#1f3755', letterSpacing: '0.5px' }}>
+              {(() => {
+                const aylar = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+                const gunler = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'];
+                const d = viewDate;
+                return `${d.getDate()} ${aylar[d.getMonth()]} ${gunler[d.getDay()]}`;
+              })()}
+            </div>
+          )}
+          <button
+            style={{ background: '#22c55e', color: '#fff', border: 0, borderRadius: 8, padding: '8px 18px', fontWeight: 700, fontSize: 16, cursor: 'pointer', marginRight: 12 }}
+            title="Hasta Ekle"
+            onClick={() => setShowAddPatient(true)}
+          >
+            + Hasta Ekle
+          </button>
+      {/* Hasta ekleme modalı */}
+      {showAddPatient && (
+        <AddPatientModal
+          open={showAddPatient}
+          onClose={() => setShowAddPatient(false)}
+          doctors={doctors}
+          onSave={(data: any) => {
+            // Kaydet fonksiyonu şimdilik boş
+            setShowAddPatient(false);
+          }}
+        />
+      )}
           {/* View controls */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
             <button onClick={goPrev} style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', background: '#fff', cursor: 'pointer', color: '#0f172a', fontWeight: 800 }}>←</button>
@@ -500,6 +587,14 @@ export default function FullAppointmentCalendar() {
             eventTimeRangeStartFormat: eventTimeRangeStartFormat as any,
             eventTimeRangeEndFormat: eventTimeRangeEndFormat as any,
             agendaTimeRangeFormat: agendaTimeRangeFormat as any,
+            weekdayFormat: (date: Date, localizer: any) => {
+              const gunler = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'];
+              return gunler[date.getDay()];
+            },
+            dayFormat: (date: Date, localizer: any) => {
+              const gunler = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'];
+              return gunler[date.getDay()];
+            },
           }}
           messages={{ noEventsInRange: 'Randevu yok', today: 'Bugün', previous: 'Önceki', next: 'Sonraki' }}
           min={new Date(viewDate.getFullYear(), viewDate.getMonth(), viewDate.getDate(), 9, 0)}
@@ -589,8 +684,71 @@ export default function FullAppointmentCalendar() {
               )}
             </div>
             <div style={{ marginBottom: 10 }}>
+              <div style={{ fontWeight: 900, marginBottom: 6, color: '#0f172a', letterSpacing: '0.5px' }}>Randevu Türü</div>
+              {/* Custom dropdown for appointment type */}
+              <div style={{ position: 'relative', marginBottom: 8 }}>
+                <div
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    borderRadius: 8,
+                    border: '1px solid #d1d5db',
+                    color: '#0f172a',
+                    fontWeight: 700,
+                    background: '#fff',
+                    cursor: 'pointer',
+                    userSelect: 'none',
+                  }}
+                  onClick={() => setCreateForm(f => ({ ...f, showTypeDropdown: !f.showTypeDropdown }))}
+                >
+                  {createForm.appointmentType || 'Tür seçiniz'}
+                  <span style={{ float: 'right', fontWeight: 400 }}>&#9660;</span>
+                </div>
+                {createForm.showTypeDropdown && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '100%',
+                      left: 0,
+                      width: '100%',
+                      background: '#fff',
+                      border: '1px solid #d1d5db',
+                      borderRadius: 8,
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                      maxHeight: 180,
+                      overflowY: 'auto',
+                      zIndex: 100,
+                    }}
+                  >
+                    <div
+                      style={{
+                        padding: '10px 12px',
+                        color: '#64748b',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        borderBottom: '1px solid #e5e7eb',
+                      }}
+                      onClick={() => setCreateForm(f => ({ ...f, appointmentType: '', showTypeDropdown: false }))}
+                    >Tür seçiniz</div>
+                    {appointmentTypes.map(type => (
+                      <div
+                        key={type}
+                        style={{
+                          padding: '10px 12px',
+                          color: '#0f172a',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          borderBottom: '1px solid #e5e7eb',
+                          background: createForm.appointmentType === type ? '#e0e7ef' : '#fff',
+                        }}
+                        onClick={() => setCreateForm(f => ({ ...f, appointmentType: type, showTypeDropdown: false }))}
+                      >{type}</div>
+                    ))}
+                  </div>
+                )}
+              </div>
               <div style={{ fontWeight: 900, marginBottom: 6, color: '#0f172a', letterSpacing: '0.5px' }}>Not</div>
-      <input value={createForm.notes} onChange={(e) => setCreateForm(f => ({ ...f, notes: e.target.value }))} style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #d1d5db', color: '#0f172a', fontWeight: 700 }} />
+              <input value={createForm.notes} onChange={(e) => setCreateForm(f => ({ ...f, notes: e.target.value }))} style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #d1d5db', color: '#0f172a', fontWeight: 700 }} />
             </div>
             <div style={{ marginBottom: 10 }}>
               <div style={{ fontWeight: 900, marginBottom: 6, color: '#0f172a', letterSpacing: '0.5px' }}>Süre</div>
@@ -648,7 +806,9 @@ export default function FullAppointmentCalendar() {
 
             <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
               <button onClick={() => setShowCreate(false)} style={{ padding: '10px 16px', borderRadius: 8, border: '2px solid #dc2626', background: '#ef4444', color: '#fff', fontWeight: 900, letterSpacing: '0.5px', boxShadow: '0 2px 8px rgba(220,38,38,0.08)' }}>İptal</button>
-              <button onClick={createAppointment} style={{ padding: '10px 16px', borderRadius: 8, border: '2px solid #3174ad', background: '#3174ad', color: '#fff', fontWeight: 900, letterSpacing: '0.5px', boxShadow: '0 2px 8px rgba(49,116,173,0.08)' }}>Oluştur</button>
+              <button onClick={() => {
+                createAppointment();
+              }} style={{ padding: '10px 16px', borderRadius: 8, border: '2px solid #3174ad', background: '#3174ad', color: '#fff', fontWeight: 900, letterSpacing: '0.5px', boxShadow: '0 2px 8px rgba(49,116,173,0.08)' }}>Oluştur</button>
             </div>
           </div>
         </div>
