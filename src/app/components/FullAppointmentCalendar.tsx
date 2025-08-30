@@ -66,6 +66,7 @@ export default function FullAppointmentCalendar() {
   // Doctors
   const [doctors, setDoctors] = useState<any[]>([]);
   const [selectedDoctorId, setSelectedDoctorId] = useState<string>('all');
+  const [doctorOrders, setDoctorOrders] = useState<any[]>([]); // Sıralı doktorlar
 
   // Appointments
   const [events, setEvents] = useState<CalendarEvent[]>([]);
@@ -154,14 +155,22 @@ export default function FullAppointmentCalendar() {
         }
         // Şubedeki doktorlar
         const token = localStorage.getItem('token');
-  const res = await fetch('https://dentalapi.karadenizdis.com/api/user/doctors/by-branch', {
+        const res = await fetch('https://dentalapi.karadenizdis.com/api/user/doctors/by-branch', {
           headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         });
         const data = await res.json();
         if (data?.success) setDoctors(data.data || []);
       } catch {}
     };
+    const loadDoctorOrders = async () => {
+      try {
+        const res = await fetch('https://dentalapi.karadenizdis.com/api/doctor-order/doctor-order');
+        const data = await res.json();
+        if (data?.success) setDoctorOrders(data.data || []);
+      } catch {}
+    };
     loadDoctors();
+    loadDoctorOrders();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [role, user?.user_id]);
 
@@ -455,8 +464,31 @@ export default function FullAppointmentCalendar() {
     }
   };
 
-  // Resources for all doctors
-  const resources = isAllDoctors ? doctors.map((d: any) => ({ resourceId: d.user_id, resourceTitle: `${d.first_name} ${d.last_name}` })) : undefined;
+  // Resources for all doctors (order_num'a göre sıralı)
+  const resources = isAllDoctors
+    ? [
+        // Önce sırası olan doktorlar
+        ...doctorOrders
+          .map((order: any) => {
+            const doctor = doctors.find((d: any) => String(d.user_id) === String(order.doctor_id));
+            if (!doctor) return null;
+            return {
+              resourceId: doctor.user_id,
+              resourceTitle: `${doctor.first_name} ${doctor.last_name}`,
+              order_num: order.order_num
+            };
+          })
+          .filter(Boolean),
+        // Sonra sırası olmayan doktorlar
+        ...doctors
+          .filter((d: any) => !doctorOrders.some((o: any) => String(o.doctor_id) === String(d.user_id)))
+          .map((d: any) => ({
+            resourceId: d.user_id,
+            resourceTitle: `${d.first_name} ${d.last_name}`,
+            order_num: 9999 // Sona ekle
+          }))
+      ]
+    : undefined;
 
   return (
   <div style={{ minHeight: '100vh', background: '#f5f7fb', overflowX: 'auto', maxWidth: '100vw', boxSizing: 'border-box', padding: 0 }}>

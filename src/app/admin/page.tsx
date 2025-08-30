@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 
 export default function AdminPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'users' | 'treatments' | 'pricelists' | 'branches'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'treatments' | 'pricelists' | 'branches' | 'doctororders'>('users');
   const [role, setRole] = useState<string>("");
 
   useEffect(() => {
@@ -29,7 +29,8 @@ export default function AdminPage() {
     { id: 'users', label: '👥 Kullanıcı Yönetimi', icon: '👥' },
     { id: 'treatments', label: '🦷 Tedavi Türleri', icon: '🦷' },
     { id: 'pricelists', label: '💰 Fiyat Listeleri', icon: '💰' },
-    { id: 'branches', label: '🏢 Şubeler', icon: '🏢' }
+    { id: 'branches', label: '🏢 Şubeler', icon: '🏢' },
+    { id: 'doctororders', label: '📋 Doktor Sıraları', icon: '📋' }
   ];
 
   if (role !== "admin") {
@@ -122,6 +123,7 @@ export default function AdminPage() {
         {activeTab === 'treatments' && <TreatmentManagement />}
         {activeTab === 'pricelists' && <PriceListManagement />}
         {activeTab === 'branches' && <BranchManagement />}
+        {activeTab === 'doctororders' && <DoctorOrderManagement />}
       </div>
     </div>
   );
@@ -1820,6 +1822,119 @@ function BranchManagement() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+// Doktor Sıraları Yönetimi Component
+function DoctorOrderManagement() {
+  const [orders, setOrders] = useState<any[]>([]);
+  const [doctors, setDoctors] = useState<any[]>([]);
+  const [branches, setBranches] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [form, setForm] = useState({ doctor_id: '', order_num: '' });
+  const [error, setError] = useState('');
+
+  // Sıraları ve doktorları getir
+  const fetchOrders = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('https://dentalapi.karadenizdis.com/api/doctor-order/doctor-order');
+      const data = await res.json();
+      if (data.success) setOrders(data.data);
+    } catch (err) { setError('Sıralar alınamadı'); }
+    setLoading(false);
+  };
+  const fetchDoctors = async () => {
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      const res = await fetch('https://dentalapi.karadenizdis.com/api/user/doctors/by-branch', {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
+      const data = await res.json();
+      if (data.success) setDoctors(data.data);
+    } catch {}
+  };
+  const fetchBranches = async () => {
+    try {
+      const res = await fetch('https://dentalapi.karadenizdis.com/api/branch');
+      const data = await res.json();
+      if (data.success) setBranches(data.data || []);
+    } catch {}
+  };
+  useEffect(() => { fetchOrders(); fetchDoctors(); fetchBranches(); }, []);
+
+  // Sıra ekle
+  const handleAdd = async (e: any) => {
+    e.preventDefault();
+    setError('');
+    if (!form.doctor_id || !form.order_num) { setError('Doktor ve sıra numarası zorunlu'); return; }
+    try {
+      const res = await fetch('https://dentalapi.karadenizdis.com/api/doctor-order/doctor-order', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ doctor_id: form.doctor_id, order_num: Number(form.order_num) })
+      });
+      const data = await res.json();
+      if (data.success) { setForm({ doctor_id: '', order_num: '' }); fetchOrders(); }
+      else setError(data.message || 'Ekleme hatası');
+    } catch { setError('Sunucu hatası'); }
+  };
+
+  // Sıra sil
+  const handleDelete = async (id: any) => {
+    if (!window.confirm('Bu doktor sırasını silmek istediğinize emin misiniz?')) return;
+    try {
+      const res = await fetch(`https://dentalapi.karadenizdis.com/api/doctor-order/doctor-order/${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) fetchOrders();
+      else setError(data.message || 'Silme hatası');
+    } catch { setError('Sunucu hatası'); }
+  };
+
+  return (
+    <div style={{ background: '#fff', borderRadius: 12, padding: 24, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+      <h2 style={{ margin: 0, color: '#1a237e', fontSize: 20 }}>📋 Doktor Sıraları</h2>
+      <form onSubmit={handleAdd} style={{ display: 'flex', gap: 12, marginBottom: 24, alignItems: 'center' }}>
+  <select value={form.doctor_id} onChange={e => setForm(f => ({ ...f, doctor_id: e.target.value }))} style={{ padding: 8, borderRadius: 6, border: '1px solid #ddd', fontWeight: 700, color: '#222' }}>
+          <option value=''>Doktor Seçiniz</option>
+          {doctors.map((d: any) => {
+            const branch = branches.find((b: any) => b.branch_id === d.branch_id);
+            return (
+              <option key={d.user_id} value={d.user_id}>
+                {d.first_name} {d.last_name} {branch ? `- ${branch.name}` : ''}
+              </option>
+            );
+          })}
+        </select>
+  <input type='number' min={1} value={form.order_num} onChange={e => setForm(f => ({ ...f, order_num: e.target.value }))} placeholder='Sıra No' style={{ padding: 8, borderRadius: 6, border: '1px solid #ddd', width: 100, fontWeight: 700, color: '#222' }} />
+        <button type='submit' style={{ padding: '8px 16px', background: '#1976d2', color: '#fff', border: 'none', borderRadius: 6, fontWeight: 700 }}>Ekle</button>
+      </form>
+      {error && <div style={{ color: 'red', marginBottom: 12 }}>{error}</div>}
+      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <thead>
+          <tr style={{ borderBottom: '2px solid #e0e0e0' }}>
+            <th style={{ padding: 12, textAlign: 'left', color: '#222', fontWeight: 700 }}>Doktor</th>
+            <th style={{ padding: 12, textAlign: 'left', color: '#222', fontWeight: 700 }}>Şube</th>
+            <th style={{ padding: 12, textAlign: 'left', color: '#222', fontWeight: 700 }}>Sıra No</th>
+            <th style={{ padding: 12, textAlign: 'center', color: '#222', fontWeight: 700 }}>İşlem</th>
+          </tr>
+        </thead>
+        <tbody>
+          {orders.map((o: any) => {
+            const doctor = doctors.find((d: any) => String(d.user_id) === String(o.doctor_id));
+            const branch = doctor ? branches.find((b: any) => b.branch_id === doctor.branch_id) : null;
+            return (
+              <tr key={o.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
+                <td style={{ padding: 12, fontWeight: 700, color: '#222' }}>{doctor ? `${doctor.first_name} ${doctor.last_name}` : ''}</td>
+                <td style={{ padding: 12, fontWeight: 600, color: '#222' }}>{branch ? branch.name : '-'}</td>
+                <td style={{ padding: 12, fontWeight: 700, color: '#222' }}>{o.order_num}</td>
+                <td style={{ padding: 12, textAlign: 'center' }}>
+                  <button onClick={() => handleDelete(o.id)} style={{ padding: '4px 8px', background: '#e53935', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>Sil</button>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+      {orders.length === 0 && <div style={{ textAlign: 'center', padding: 40, color: '#666' }}>Henüz doktor sırası eklenmemiş.</div>}
     </div>
   );
 }
