@@ -124,6 +124,7 @@ export default function FullAppointmentCalendar() {
     selectedBranchId: branchId || '', // Şube filtreleme için
     appointmentType: '',
     showTypeDropdown: false,
+    appointmentTypeSearch: '',
   });
   const [branchName, setBranchName] = useState<string>('');
   const [branches, setBranches] = useState<any[]>([]); // Şube listesi
@@ -131,7 +132,7 @@ export default function FullAppointmentCalendar() {
   // Summary modal
   const [showSummary, setShowSummary] = useState(false);
   const [summaryData, setSummaryData] = useState<any>(null);
-  const [editFields, setEditFields] = useState<{ date: string; time: string; duration: number; notes: string }>({ date: '', time: '', duration: 30, notes: '' });
+  const [editFields, setEditFields] = useState<{ date: string; time: string; duration: number; notes: string; status: string }>({ date: '', time: '', duration: 30, notes: '', status: '' });
   const [updating, setUpdating] = useState(false);
 
   // Load user
@@ -319,6 +320,7 @@ export default function FullAppointmentCalendar() {
         time: timeStr,
         duration: a.duration_minutes || 30,
         notes: a.notes || '',
+        status: a.status || 'scheduled',
       });
       setShowSummary(true);
     } catch {
@@ -430,7 +432,7 @@ export default function FullAppointmentCalendar() {
       const base = `${editFields.date}T${editFields.time}`;
       const iso = new Date(base).toISOString();
       // First: time + duration
-  const res1 = await fetch(`https://dentalapi.karadenizdis.com/api/appointment/${a.appointment_id}/time-duration`, {
+      const res1 = await fetch(`https://dentalapi.karadenizdis.com/api/appointment/${a.appointment_id}/time-duration`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ appointmentTime: iso, duration: editFields.duration })
@@ -443,7 +445,7 @@ export default function FullAppointmentCalendar() {
       }
       // Second: notes if changed
       if ((editFields.notes || '') !== (a.notes || '')) {
-  const res2 = await fetch(`https://dentalapi.karadenizdis.com/api/appointment/${a.appointment_id}/notes`, {
+        const res2 = await fetch(`https://dentalapi.karadenizdis.com/api/appointment/${a.appointment_id}/notes`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ notes: editFields.notes })
@@ -451,6 +453,20 @@ export default function FullAppointmentCalendar() {
         const data2 = await res2.json();
         if (!(res2.ok && data2?.success)) {
           alert(data2?.message || 'Not güncellenemedi');
+          setUpdating(false);
+          return;
+        }
+      }
+      // Third: status if changed
+      if ((editFields.status || '') !== (a.status || 'scheduled')) {
+        const res3 = await fetch(`https://dentalapi.karadenizdis.com/api/appointment/${a.appointment_id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: editFields.status })
+        });
+        const data3 = await res3.json();
+        if (!(res3.ok && data3?.success)) {
+          alert(data3?.message || 'Durum güncellenemedi');
           setUpdating(false);
           return;
         }
@@ -747,11 +763,20 @@ export default function FullAppointmentCalendar() {
                       border: '1px solid #d1d5db',
                       borderRadius: 8,
                       boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-                      maxHeight: 180,
+                      maxHeight: 260,
                       overflowY: 'auto',
                       zIndex: 100,
                     }}
                   >
+                    <div style={{ padding: '8px 12px', borderBottom: '1px solid #e5e7eb', background: '#f3f4f6' }}>
+                      <input
+                        type="text"
+                        value={createForm.appointmentTypeSearch}
+                        onChange={e => setCreateForm(f => ({ ...f, appointmentTypeSearch: e.target.value }))}
+                        placeholder="Tür ara..."
+                        style={{ width: '100%', padding: '8px', borderRadius: 6, border: '1px solid #d1d5db', fontWeight: 700, color: '#0f172a' }}
+                      />
+                    </div>
                     <div
                       style={{
                         padding: '10px 12px',
@@ -760,22 +785,24 @@ export default function FullAppointmentCalendar() {
                         cursor: 'pointer',
                         borderBottom: '1px solid #e5e7eb',
                       }}
-                      onClick={() => setCreateForm(f => ({ ...f, appointmentType: '', showTypeDropdown: false }))}
+                      onClick={() => setCreateForm(f => ({ ...f, appointmentType: '', showTypeDropdown: false, appointmentTypeSearch: '' }))}
                     >Tür seçiniz</div>
-                    {appointmentTypes.map(type => (
-                      <div
-                        key={type}
-                        style={{
-                          padding: '10px 12px',
-                          color: '#0f172a',
-                          fontWeight: 700,
-                          cursor: 'pointer',
-                          borderBottom: '1px solid #e5e7eb',
-                          background: createForm.appointmentType === type ? '#e0e7ef' : '#fff',
-                        }}
-                        onClick={() => setCreateForm(f => ({ ...f, appointmentType: type, showTypeDropdown: false }))}
-                      >{type}</div>
-                    ))}
+                    {appointmentTypes
+                      .filter(type => type.toLowerCase().includes((createForm.appointmentTypeSearch || '').toLowerCase()))
+                      .map(type => (
+                        <div
+                          key={type}
+                          style={{
+                            padding: '10px 12px',
+                            color: '#0f172a',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            borderBottom: '1px solid #e5e7eb',
+                            background: createForm.appointmentType === type ? '#e0e7ef' : '#fff',
+                          }}
+                          onClick={() => setCreateForm(f => ({ ...f, appointmentType: type, showTypeDropdown: false, appointmentTypeSearch: '' }))}
+                        >{type}</div>
+                      ))}
                   </div>
                 )}
               </div>
@@ -910,6 +937,14 @@ export default function FullAppointmentCalendar() {
                 <div style={{ gridColumn: '1 / -1' }}>
       <div style={{ fontWeight: 800, marginBottom: 6, color: '#0f172a' }}>Not</div>
       <textarea rows={3} value={editFields.notes} onChange={(e) => setEditFields(f => ({ ...f, notes: e.target.value }))} style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid #d1d5db', resize: 'vertical', color: '#0f172a', fontWeight: 800 }} />
+                </div>
+                <div style={{ gridColumn: '1 / -1' }}>
+      <div style={{ fontWeight: 800, marginBottom: 6, color: '#0f172a' }}>Durum</div>
+      <select value={editFields.status} onChange={e => setEditFields(f => ({ ...f, status: e.target.value }))} style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid #d1d5db', color: '#0f172a', fontWeight: 800 }}>
+        <option value="scheduled">Planlandı</option>
+        <option value="attended">Geldi</option>
+        <option value="missed">Gelmedi</option>
+      </select>
                 </div>
               </div>
             </div>
