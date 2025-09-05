@@ -1,12 +1,21 @@
-
 "use client";
-import { useState, useEffect } from "react";
-import { FixedSizeList as List } from "react-window";
+
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-export default function PatientSearchCard() {
+const PatientSearchCard: React.FC = () => {
   const [branches, setBranches] = useState<any[]>([]);
-  const [selectedBranch, setSelectedBranch] = useState<number | null>(null);
+  const [selectedBranch, setSelectedBranch] = useState<string>("");
+  const [search, setSearch] = useState("");
+  const [patients, setPatients] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(15);
+  const [total, setTotal] = useState(0);
+  const router = useRouter();
+
+  // Şubeleri çek
   useEffect(() => {
     fetch("https://dentalapi.karadenizdis.com/api/branch")
       .then(res => res.json())
@@ -14,34 +23,26 @@ export default function PatientSearchCard() {
         if (data.success) setBranches(data.data);
       });
   }, []);
-  const [search, setSearch] = useState("");
-  const [patients, setPatients] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [page, setPage] = useState(1);
-  const [pageSize] = useState(20);
-  const [total, setTotal] = useState(0);
 
-  const router = useRouter();
-
+  // Hastaları çek
   useEffect(() => {
     setLoading(true);
+    setError("");
     const params = new URLSearchParams();
     params.append("limit", pageSize.toString());
     params.append("offset", ((page-1)*pageSize).toString());
-    if (search.trim() !== "") {
-      params.append("search", search.trim());
-    }
-    if (selectedBranch) {
-      params.append("branch_id", selectedBranch.toString());
-    }
+    if (search.trim() !== "") params.append("search", search.trim());
+    if (selectedBranch) params.append("branch_id", selectedBranch);
     fetch(`https://dentalapi.karadenizdis.com/api/patient?${params.toString()}`)
       .then(res => res.json())
       .then(data => {
         if (data.success) {
           setPatients(data.data);
           setTotal(data.total || 0);
-        } else setPatients([]);
+        } else {
+          setPatients([]);
+          setTotal(0);
+        }
         setLoading(false);
       })
       .catch(() => {
@@ -49,91 +50,192 @@ export default function PatientSearchCard() {
         setLoading(false);
       });
   }, [search, page, pageSize, selectedBranch]);
-
-  // Arama ve pagination backend'den geldiği için, sadece gelen hastalar gösterilecek
-  const filtered = patients;
-
   return (
-  <div style={{ background: "white", borderRadius: 12, padding: 20, boxShadow: "0 2px 8px #0001", minWidth: 280, maxWidth: 340, minHeight: 480, height: 480, display: "flex", flexDirection: "column" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12, width: "100%" }}>
-        <select
-          value={selectedBranch ?? ""}
-          onChange={e => setSelectedBranch(e.target.value ? Number(e.target.value) : null)}
-          style={{ padding: 8, borderRadius: 6, border: "1.5px solid #1976d2", fontWeight: 700, fontSize: 15, background: '#f8fafc', width: 100, color: '#1a237e', minWidth: 90 }}
-        >
-          <option value="" style={{ color: '#1a237e', fontWeight: 700 }}>Tüm Şubeler</option>
-          {branches.map(b => (
-            <option key={b.branch_id} value={b.branch_id} style={{ color: '#1a237e', fontWeight: 700 }}>{b.name}</option>
-          ))}
-        </select>
+    <div
+      className="patient-search-card"
+      style={{
+        background: "#fff",
+        borderRadius: 16,
+        padding: 24,
+        boxShadow: "0 2px 16px #0002",
+        minWidth: 280,
+        maxWidth: 380,
+        minHeight: 320,
+        maxHeight: 520,
+        height: "auto",
+        display: "flex",
+        flexDirection: "column",
+        gap: 16,
+      }}
+    >
+      {/* Arama ve şube filtre alanı */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         <input
           type="text"
-          placeholder="Hasta ara..."
+          placeholder="Hasta adı veya soyadı ara..."
           value={search}
           onChange={e => { setSearch(e.target.value); setPage(1); }}
-          style={{ flex: 1, padding: 8, borderRadius: 6, border: "1.5px solid #1976d2", fontWeight: 700, color: "#1a237e", fontSize: 15, background: '#f8fafc', minWidth: 0 }}
+          style={{
+            padding: "10px 14px",
+            borderRadius: 8,
+            border: "1.5px solid #b6c2e2",
+            fontSize: 16,
+            outline: "none",
+            fontWeight: 600,
+            color: "#1a237e",
+            background: "#fafdff",
+            letterSpacing: 0.1,
+          }}
         />
-        <span style={{
-          minWidth: 32,
-          textAlign: 'center',
-          fontSize: 13,
-          color: '#0a2972',
-          background: '#e3eafc',
-          borderRadius: 6,
-          padding: '2px 6px',
-          fontWeight: 700,
-          border: '1.5px solid #1976d2',
-          boxShadow: '0 1px 4px #e3eaff33',
-          whiteSpace: 'nowrap',
-          lineHeight: 1.1
-        }}>
-          {total}
-        </span>
+        <select
+          value={selectedBranch}
+          onChange={e => { setSelectedBranch(e.target.value); setPage(1); }}
+          style={{
+            padding: "10px 14px",
+            borderRadius: 8,
+            border: "1.5px solid #b6c2e2",
+            fontSize: 16,
+            background: "#fafdff",
+            fontWeight: 600,
+            color: "#1a237e",
+            letterSpacing: 0.1,
+          }}
+        >
+          <option value="" style={{ fontWeight: 700, color: '#1a237e' }}>Tüm Şubeler</option>
+          {branches.map((b: any) => (
+            <option key={b.branch_id} value={b.branch_id} style={{ fontWeight: 600, color: '#1a237e' }}>{b.name}</option>
+          ))}
+        </select>
       </div>
-  <div style={{ flex: 1 }}>
-        {loading && <div style={{ color: "#888", textAlign: "center", fontWeight: 500 }}>Yükleniyor...</div>}
-        {error && <div style={{ color: "#e53935", textAlign: "center", fontWeight: 500 }}>{error}</div>}
-        {!loading && !error && filtered.length === 0 && <div style={{ color: "#888", textAlign: "center", fontWeight: 500 }}>Hasta bulunamadı</div>}
-        {!loading && !error && (
-          <List
-            height={340}
-            itemCount={filtered.length}
-            itemSize={44}
-            width={"100%"}
-            style={{ overflowX: "hidden" }}
-          >
-            {({ index, style }: { index: number; style: React.CSSProperties }) => {
-              const p = filtered[index];
-              return (
-                <div
-                  key={p.patient_id}
-                  style={{
-                    ...style,
-                    padding: "8px 0",
-                    borderBottom: "1px solid #f0f0f0",
-                    fontSize: 16,
-                    color: "#1a237e",
-                    fontWeight: 600,
-                    cursor: "pointer",
-                    transition: "background 0.2s"
-                  }}
-                  onClick={() => router.push(`/patients/card/?id=${p.patient_id}`)}
-                  onMouseOver={e => (e.currentTarget.style.background = "#e3eafc")}
-                  onMouseOut={e => (e.currentTarget.style.background = "")}
-                >
-                  {p.first_name} {p.last_name}
-                </div>
-              );
-            }}
-          </List>
+
+      {/* Hasta listesi alanı */}
+      <div
+        style={{
+          flex: 1,
+          overflowY: "auto",
+          marginTop: 8,
+          marginBottom: 8,
+          borderRadius: 8,
+          border: "1px solid #f0f0f0",
+          background: "#fafbfc",
+          display: "flex",
+          flexDirection: "column",
+          gap: 8,
+          minHeight: 200,
+          maxHeight: 340,
+        }}
+      >
+        {loading && (
+          <div style={{ color: "#888", textAlign: "center", marginTop: 32 }}>Yükleniyor...</div>
         )}
+        {error && (
+          <div style={{ color: "#e53935", textAlign: "center", marginTop: 32 }}>{error}</div>
+        )}
+        {!loading && !error && patients.length === 0 && (
+          <div style={{ color: "#888", textAlign: "center", marginTop: 32 }}>Hasta bulunamadı</div>
+        )}
+        {!loading && !error && patients.map((p: any) => (
+          <div
+            key={p.patient_id}
+            onClick={() => router.push(`/patients/card?id=${p.patient_id}`)}
+            style={{
+              padding: "12px 10px",
+              borderRadius: 8,
+              background: "#fff",
+              boxShadow: "0 1px 4px #e3eaff33",
+              border: "1px solid #e3eafc",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              flexDirection: "row",
+              gap: 8,
+              transition: "background 0.2s",
+            }}
+            onMouseOver={e => (e.currentTarget.style.background = "#e3eafc")}
+            onMouseOut={e => (e.currentTarget.style.background = "#fff")}
+          >
+            <span style={{ fontWeight: 700, color: "#1976d2", fontSize: 16 }}>
+              {p.first_name} {p.last_name}
+            </span>
+            <span style={{ fontSize: 13, color: "#6073a6", background: "#f0f4ff", borderRadius: 6, padding: "2px 8px", fontWeight: 500, marginLeft: "auto" }}>
+              {p.branch_name}
+            </span>
+          </div>
+        ))}
       </div>
-      {/* Pagination - kartın içinde, en altta ortalanmış */}
-      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 12, marginTop: "auto", paddingTop: 12 }}>
-        <button disabled={page === 1} onClick={() => setPage(page-1)} style={{ padding: "8px 18px", borderRadius: 8, border: "1.5px solid #dbeafe", background: page === 1 ? "#eee" : "#0a2972", color: "#fff", fontWeight: 600, cursor: page === 1 ? "not-allowed" : "pointer", fontSize: 15, boxShadow: page === 1 ? "none" : "0 2px 8px #0001" }}>Önceki</button>
-        <span style={{ fontWeight: 700, color: "#1976d2", fontSize: 15 }}>{page} / {Math.max(1, Math.ceil(total / pageSize))}</span>
-        <button disabled={page * pageSize >= total} onClick={() => setPage(page+1)} style={{ padding: "8px 18px", borderRadius: 8, border: "1.5px solid #dbeafe", background: page * pageSize >= total ? "#eee" : "#0a2972", color: "#fff", fontWeight: 600, cursor: page * pageSize >= total ? "not-allowed" : "pointer", fontSize: 15, boxShadow: page * pageSize >= total ? "none" : "0 2px 8px #0001" }}>Sonraki</button>
+
+      {/* Pagination alanı */}
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 14, marginTop: 8 }}>
+        <button
+          onClick={() => setPage(page - 1)}
+          disabled={page === 1 || loading}
+          style={{
+            padding: "7px 18px",
+            borderRadius: 8,
+            border: "none",
+            background: page === 1 || loading ? "#eee" : "#1976d2",
+            color: page === 1 || loading ? "#888" : "#fff",
+            fontWeight: 700,
+            fontSize: 15,
+            cursor: page === 1 || loading ? "not-allowed" : "pointer",
+            minWidth: 80,
+            position: "relative",
+            transition: "background 0.2s, color 0.2s"
+          }}
+        >
+          {loading ? (
+            <span style={{ display: "inline-block", width: 18, height: 18, border: "2.5px solid #fff", borderTop: "2.5px solid #1976d2", borderRadius: "50%", animation: "spin 1s linear infinite", verticalAlign: "middle" }} />
+          ) : (
+            "Önceki"
+          )}
+        </button>
+        <span style={{
+          background: "#e3eaff",
+          color: "#1976d2",
+          fontWeight: 700,
+          fontSize: 16,
+          borderRadius: 8,
+          padding: "6px 18px",
+          minWidth: 70,
+          textAlign: "center",
+          letterSpacing: 0.2,
+          boxShadow: "0 1px 4px #e3eaff33"
+        }}>
+          {page} <span style={{ color: "#888", fontWeight: 500, fontSize: 14 }}>/ {Math.max(1, Math.ceil(total / pageSize))}</span>
+        </span>
+        <button
+          onClick={() => setPage(page + 1)}
+          disabled={page * pageSize >= total || loading}
+          style={{
+            padding: "7px 18px",
+            borderRadius: 8,
+            border: "none",
+            background: page * pageSize >= total || loading ? "#eee" : "#1976d2",
+            color: page * pageSize >= total || loading ? "#888" : "#fff",
+            fontWeight: 700,
+            fontSize: 15,
+            cursor: page * pageSize >= total || loading ? "not-allowed" : "pointer",
+            minWidth: 80,
+            position: "relative",
+            transition: "background 0.2s, color 0.2s"
+          }}
+        >
+          {loading ? (
+            <span style={{ display: "inline-block", width: 18, height: 18, border: "2.5px solid #fff", borderTop: "2.5px solid #1976d2", borderRadius: "50%", animation: "spin 1s linear infinite", verticalAlign: "middle" }} />
+          ) : (
+            "Sonraki"
+          )}
+        </button>
+        {/* Spinner animasyonu için style ekle */}
+        <style>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
       </div>
     </div>
   );
-}
+};
+
+export default PatientSearchCard;

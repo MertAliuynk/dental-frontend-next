@@ -103,26 +103,46 @@ function AppointmentCard({ doctor, appointment, onStatusUpdate, role }: Appointm
 
   if (!appointment) {
     return (
-      <div style={{ 
-        background: "white", 
-        borderRadius: 12, 
-        boxShadow: "0 2px 8px rgba(0,0,0,0.06)", 
-        padding: 18, 
-        border: "1px solid #e3eafc",
-        opacity: 0.6
+      <div style={{
+        background: "linear-gradient(120deg, #fafdff 60%, #e3eaff 100%)",
+        borderRadius: 22,
+        boxShadow: "0 8px 32px #1976d233, 0 1.5px 0 #1976d2",
+        padding: 28,
+        minWidth: 340,
+        maxWidth: 340,
+        height: 360,
+        border: "2px solid #1976d2",
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column' as const,
+        justifyContent: 'flex-start',
+        position: 'relative' as const,
+        alignItems: 'center',
+        opacity: 0.7,
+        marginBottom: 0
       }}>
-        <div style={{ 
-          fontWeight: 700, 
-          marginBottom: 10, 
-          fontSize: 16, 
-          color: "#1a237e", 
+        <div style={{
+          fontWeight: 900,
+          marginBottom: 14,
+          fontSize: 20,
+          color: "#1976d2",
           textAlign: "center",
-          borderBottom: "2px solid #e3eafc",
-          paddingBottom: 8
+          borderBottom: "2.5px solid #e3eaff",
+          paddingBottom: 10,
+          letterSpacing: 0.2,
+          textShadow: "0 2px 8px #e3eaff77",
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 8
         }}>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style={{marginRight:4,verticalAlign:'middle'}}><circle cx="12" cy="12" r="12" fill="#1976d2" opacity="0.12"/><path d="M12 12c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V20h14v-2.5c0-2.33-4.67-3.5-7-3.5z" fill="#1976d2"/></svg>
           Dt. {doctor.first_name} {doctor.last_name}
         </div>
-        <div style={{ textAlign: "center", color: "#555", padding: "20px 0" }}>
+        <div style={{ textAlign: "center", color: "#6073a6", fontWeight: 700, fontSize: 17, marginTop: 40 }}>
           Sıradaki randevu yok
         </div>
       </div>
@@ -130,66 +150,87 @@ function AppointmentCard({ doctor, appointment, onStatusUpdate, role }: Appointm
   }
 
   const isDoctor = role === "doctor";
-  const cardStyle = isDoctor ? {
-    background: "white", 
-    borderRadius: 12, 
-    boxShadow: "0 4px 12px rgba(0,0,0,0.1)", 
-    padding: 24, 
-    minWidth: 350,
-    maxWidth: 400,
-    border: "2px solid #e3eafc"
-  } : {
-    background: "white", 
-    borderRadius: 12, 
-    boxShadow: "0 2px 8px rgba(0,0,0,0.06)", 
-    padding: 18, 
-    border: "1px solid #e3eafc"
+  const cardStyle = {
+    background: "linear-gradient(120deg, #fafdff 60%, #e3eaff 100%)",
+    borderRadius: 22,
+    boxShadow: "0 8px 32px #1976d233, 0 1.5px 0 #1976d2",
+    padding: 28,
+    minWidth: 320,
+    maxWidth: 340,
+    height: 360,
+    border: "2px solid #1976d2",
+    overflow: 'hidden',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    justifyContent: 'flex-start',
+  position: 'relative' as const,
+    transition: 'box-shadow .18s, transform .18s',
+    outline: 'none',
   };
 
   return (
     <div style={cardStyle}>
-      <div style={{ 
-        fontWeight: 700, 
-        marginBottom: isDoctor ? 12 : 10, 
-        fontSize: isDoctor ? 18 : 16, 
-        color: "#1a237e", 
+      <div style={{
+        fontWeight: 900,
+        marginBottom: 10,
+        fontSize: 16,
+        color: "#1976d2",
         textAlign: "center",
-        borderBottom: "2px solid #e3eafc",
-        paddingBottom: 8
+        borderBottom: "2.5px solid #e3eaff",
+        paddingBottom: 7,
+        letterSpacing: 0.15,
+        textShadow: "0 2px 8px #e3eaff77",
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 6
       }}>
-  Dt. {doctor.first_name} {doctor.last_name}
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style={{marginRight:4,verticalAlign:'middle'}}><circle cx="12" cy="12" r="12" fill="#1976d2" opacity="0.12"/><path d="M12 12c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V20h14v-2.5c0-2.33-4.67-3.5-7-3.5z" fill="#1976d2"/></svg>
+        Dt. {doctor.first_name} {doctor.last_name}
       </div>
       
 
-      <div style={{ fontWeight: 700, marginBottom: 8, fontSize: isDoctor ? 15 : 15, color: '#0d1333', letterSpacing: 0.2 }}>
-        Hasta: <span style={{ color: '#1976d2' }}>
+  <div style={{ fontWeight: 800, marginBottom: 6, fontSize: 13.5, color: '#0d1333', letterSpacing: 0.15, display: 'flex', alignItems: 'center', gap: 5 }}>
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#1976d2" opacity="0.18"/><path d="M12 12c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V20h14v-2.5c0-2.33-4.67-3.5-7-3.5z" fill="#1976d2"/></svg>
+        Hasta: <span style={{ color: '#1976d2', textDecoration: 'underline', cursor: 'pointer', fontWeight: 900 }}
+          onClick={() => window.open(`/patients/card?id=${appointment.patient_id}`, '_blank')}
+        >
           {appointment.patient_first_name || appointment.patient_last_name
             ? `${appointment.patient_first_name || ''} ${appointment.patient_last_name || ''}`.trim()
             : appointment.patient_name || 'Bilinmiyor'}
         </span>
       </div>
 
-      <div style={{ fontSize: isDoctor ? 13 : 12, color: '#222', marginBottom: 8, fontWeight: 500 }}>
-        Randevu: <span style={{ color: '#0d47a1' }}>{new Date(appointment.appointment_time).toLocaleString('tr-TR')}</span>
+      <div style={{ fontSize: 12.5, color: '#222', marginBottom: 6, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#1976d2" opacity="0.13"/><path d="M12 7v5l4 2" stroke="#1976d2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><circle cx="12" cy="12" r="9" stroke="#1976d2" strokeWidth="2"/></svg>
+        Randevu: <span style={{ color: '#1976d2', fontWeight: 800 }}>{new Date(appointment.appointment_time).toLocaleString('tr-TR')}</span>
       </div>
 
-      <div style={{ fontSize: isDoctor ? 15 : 14, color: '#333', marginBottom: 8, fontWeight: 500 }}>
-        Biten Tedavi: <span style={{ color: '#1976d2', fontWeight: 700 }}>isteğe bağlı</span>
+      <div style={{ fontSize: 12.5, color: '#333', marginBottom: 6, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#1976d2" opacity="0.10"/><path d="M19 7v4a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7" stroke="#1976d2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><rect x="7" y="3" width="10" height="4" rx="2" fill="#1976d2" opacity="0.18"/></svg>
+        <span>Biten Tedavi:</span> <span style={{ color: '#1976d2', fontWeight: 800, marginLeft: 2 }}>isteğe bağlı</span>
       </div>
 
-      <div style={{ marginBottom: 8 }}>
+  <div style={{ marginBottom: 6 }}>
         <select
           value={selectedTreatment || ""}
           onChange={(e) => setSelectedTreatment(e.target.value ? parseInt(e.target.value) : null)}
           style={{
             width: "100%",
-            padding: isDoctor ? 9 : 7,
-            borderRadius: 6,
-            border: "1.5px solid #1976d2",
-            fontSize: isDoctor ? 15 : 14,
-            color: '#0d1333',
-            background: '#f8fafc',
-            fontWeight: 500
+            padding: 7,
+            borderRadius: 8,
+            border: "1.2px solid #1976d2",
+            fontSize: 12.5,
+            color: '#1976d2',
+            background: '#fafdff',
+            fontWeight: 700,
+            boxShadow: '0 1.5px 0 #e3eaff',
+            transition: 'border .18s, box-shadow .18s',
+            outline: 'none',
+            marginTop: 2
           }}
         >
           <option value="" style={{ color: '#888' }}>Tedavi seç (isteğe bağlı)</option>
@@ -202,7 +243,7 @@ function AppointmentCard({ doctor, appointment, onStatusUpdate, role }: Appointm
         </select>
       </div>
 
-      <div style={{ marginBottom: isDoctor ? 12 : 10 }}>
+  <div style={{ marginBottom: 10 }}>
         <input
           type="text"
           placeholder="NOT : (Zorunlu)"
@@ -210,30 +251,38 @@ function AppointmentCard({ doctor, appointment, onStatusUpdate, role }: Appointm
           onChange={(e) => setNotes(e.target.value)}
           style={{
             width: "100%",
-            padding: isDoctor ? 9 : 7,
-            borderRadius: 6,
-            border: notes.trim() ? "1.5px solid #4caf50" : "1.5px solid #f44336",
-            fontSize: isDoctor ? 15 : 14,
-            color: '#0d1333',
-            background: '#f8fafc',
-            fontWeight: 500
+            padding: 7,
+            borderRadius: 8,
+            border: notes.trim() ? "1.2px solid #43a047" : "1.2px solid #e53935",
+            fontSize: 12.5,
+            color: '#1976d2',
+            background: '#fafdff',
+            fontWeight: 700,
+            boxShadow: '0 1.5px 0 #e3eaff',
+            transition: 'border .18s, box-shadow .18s',
+            outline: 'none',
+            marginTop: 2
           }}
         />
       </div>
       
-      <div style={{ display: "flex", gap: isDoctor ? 12 : 8, justifyContent: "center" }}>
+  <div style={{ display: "flex", gap: 10, justifyContent: "center", marginTop: 4 }}>
         <button 
           onClick={() => handleStatusClick('geldi')}
           disabled={isLoading || !notes.trim()}
           style={{ 
-            background: (!notes.trim() || isLoading) ? "#ccc" : "#4caf50", 
-            color: "white", 
+            background: (!notes.trim() || isLoading) ? "#b2dfdb" : "linear-gradient(90deg, #43a047 0%, #1976d2 100%)", 
+            color: "#fff", 
             border: 0, 
-            borderRadius: 6, 
-            padding: isDoctor ? "10px 28px" : "6px 20px", 
-            fontWeight: 600, 
+            borderRadius: 10, 
+            padding: "8px 22px", 
+            fontWeight: 800, 
             cursor: (!notes.trim() || isLoading) ? "not-allowed" : "pointer", 
-            fontSize: isDoctor ? 14 : 13 
+            fontSize: 12.5,
+            boxShadow: (!notes.trim() || isLoading) ? "none" : "0 2px 8px #43a04733",
+            transition: 'background .18s, transform .12s, box-shadow .18s',
+            outline: 'none',
+            letterSpacing: 0.1
           }}
         >
           {isLoading ? "Kaydediliyor..." : "Geldi"}
@@ -242,14 +291,18 @@ function AppointmentCard({ doctor, appointment, onStatusUpdate, role }: Appointm
           onClick={() => handleStatusClick('gelmedi')}
           disabled={isLoading || !notes.trim() || !!selectedTreatment}
           style={{ 
-            background: (!notes.trim() || isLoading || !!selectedTreatment) ? "#ccc" : "#e53935", 
-            color: "white", 
+            background: (!notes.trim() || isLoading || !!selectedTreatment) ? "#ffcdd2" : "linear-gradient(90deg, #e53935 0%, #1976d2 100%)", 
+            color: "#fff", 
             border: 0, 
-            borderRadius: 6, 
-            padding: isDoctor ? "10px 28px" : "6px 20px", 
-            fontWeight: 600, 
+            borderRadius: 10, 
+            padding: "8px 22px", 
+            fontWeight: 800, 
             cursor: (!notes.trim() || isLoading || !!selectedTreatment) ? "not-allowed" : "pointer", 
-            fontSize: isDoctor ? 14 : 13 
+            fontSize: 12.5,
+            boxShadow: (!notes.trim() || isLoading || !!selectedTreatment) ? "none" : "0 2px 8px #e5393533",
+            transition: 'background .18s, transform .12s, box-shadow .18s',
+            outline: 'none',
+            letterSpacing: 0.1
           }}
         >
           {isLoading ? "Kaydediliyor..." : "Gelmedi"}
@@ -262,9 +315,10 @@ function AppointmentCard({ doctor, appointment, onStatusUpdate, role }: Appointm
 export default function UpcomingAppointments({ role }: { role: string }) {
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  const [loadingUser, setLoadingUser] = useState(true);
   const [selectedBranchId, setSelectedBranchId] = useState<number>(1);
   const [userBranchId, setUserBranchId] = useState<number>(1);
-  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
 
   // Kullanıcı bilgilerini al
   useEffect(() => {
@@ -298,23 +352,38 @@ export default function UpcomingAppointments({ role }: { role: string }) {
     }
   }, [role]);
 
-  // Şube değişikliklerini dinle
-  useEffect(() => {
-    const handleBranchChange = (event: any) => {
-      const newBranchId = event.detail.branchId;
+  // Kullanıcı id'yi localStorage'dan al
+useEffect(() => {
+  // Kullanıcı id'yi localStorage'dan al
+  if (typeof window !== 'undefined') {
+    try {
+      const uStr = localStorage.getItem('user');
+      if (uStr) {
+        const u = JSON.parse(uStr);
+        if (u?.user_id) setCurrentUserId(Number(u.user_id));
+      }
+    } catch {}
+    setLoadingUser(false);
+  }
+}, []);
+
+// Şube değişikliklerini dinle
+useEffect(() => {
+  const handleBranchChange = (event: any) => {
+    const newBranchId = event.detail.branchId;
     setSelectedBranchId(newBranchId);
     // Şube değişince doktorlar ve randevuları otomatik getir
     fetchDoctors();
     fetchAppointments();
-    };
+  };
 
-    if (role === "admin" || role === "branch_manager" || role === "receptionist") {
-      window.addEventListener('branchChanged', handleBranchChange);
-      return () => {
-        window.removeEventListener('branchChanged', handleBranchChange);
-      };
-    }
-  }, [role]);
+  if (role === "admin" || role === "branch_manager" || role === "receptionist") {
+    window.addEventListener('branchChanged', handleBranchChange);
+    return () => {
+      window.removeEventListener('branchChanged', handleBranchChange);
+    };
+  }
+}, [role]);
 
   // Doktorları getir
   const fetchDoctors = async () => {
@@ -422,7 +491,7 @@ export default function UpcomingAppointments({ role }: { role: string }) {
 
   // Her doktor için ilk randevuyu bul
   const getDoctorNextAppointment = (doctorId: number): Appointment | null => {
-    return appointments.find(apt => apt.doctor_id === doctorId) || null;
+    return appointments.find(apt => String(apt.doctor_id) === String(doctorId)) || null;
   };
 
   // Doktor ise: Tek büyük kart ortada
@@ -451,6 +520,13 @@ export default function UpcomingAppointments({ role }: { role: string }) {
     );
   }
 
+  if (loadingUser) {
+    return (
+      <div style={{ textAlign: "center", marginTop: 32, color: "#1a237e", fontWeight: 700, fontSize: 18 }}>
+        Kullanıcı bilgileri yükleniyor...
+      </div>
+    );
+  }
   // Admin/Manager/Receptionist: Her doktor için ayrı kart
   if (doctors.length === 0) {
     return (
@@ -464,21 +540,44 @@ export default function UpcomingAppointments({ role }: { role: string }) {
     <div
       style={{
         display: "flex",
-        gap: 20,
+        flexDirection: "row" as const,
+        gap: 28,
         marginTop: 32,
-        padding: "0 12px",
+        padding: "0 12px 16px 12px",
         overflowX: "auto",
-        maxWidth: "100vw",
-        boxSizing: "border-box",
-        justifyContent: "center",
-        flexDirection: typeof window !== 'undefined' && window.innerWidth <= 600 ? 'column' : 'row',
-        alignItems: typeof window !== 'undefined' && window.innerWidth <= 600 ? 'stretch' : 'flex-start'
+        overflowY: "hidden",
+  width: "100%",
+  minWidth: 0,
+  boxSizing: "border-box",
+  justifyContent: "center",
+  alignItems: "stretch",
+  scrollbarWidth: 'thin',
+  WebkitOverflowScrolling: 'touch',
+  minHeight: 400,
+  scrollSnapType: 'x mandatory',
+  paddingLeft: 600,
+  paddingRight: 32,
       }}
     >
       {doctors.map((doctor) => {
         const nextAppointment = getDoctorNextAppointment(doctor.user_id);
         return (
-          <div style={{ minWidth: 280, flex: "0 0 auto" }} key={doctor.user_id}>
+          <div
+            style={{
+              width: 340,
+              minWidth: 340,
+              maxWidth: 340,
+              flex: "0 0 340px",
+              height: 360,
+              overflow: "hidden",
+              display: 'flex',
+              alignItems: 'stretch',
+              transition: 'box-shadow .18s, transform .18s',
+              scrollSnapAlign: 'start',
+              marginBottom: 0
+            }}
+            key={doctor.user_id}
+          >
             <AppointmentCard
               doctor={doctor}
               appointment={nextAppointment}

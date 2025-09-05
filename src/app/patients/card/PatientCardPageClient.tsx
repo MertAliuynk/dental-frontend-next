@@ -58,6 +58,50 @@ export default function PatientCardPageClient() {
   const [selectedTreatments, setSelectedTreatments] = useState<number[]>([]);
   const [approvingTreatments, setApprovingTreatments] = useState(false);
   const [selectedApprovedTreatments, setSelectedApprovedTreatments] = useState<number[]>([]);
+  const [selectedCompletedTreatments, setSelectedCompletedTreatments] = useState<number[]>([]);
+  // Tamamlanan tedavilerde seçim toggle
+  const toggleCompletedTreatmentSelection = (treatmentId: number) => {
+    setSelectedCompletedTreatments(prev =>
+      prev.includes(treatmentId)
+        ? prev.filter(id => id !== treatmentId)
+        : [...prev, treatmentId]
+    );
+  };
+
+  // Tamamlanan tedavilerde geri al (approved'a çek)
+  const handleUndoCompletedTreatments = async () => {
+    if (selectedCompletedTreatments.length === 0) {
+      alert("Lütfen geri alınacak tedavileri seçin");
+      return;
+    }
+    if (!window.confirm(`${selectedCompletedTreatments.length} tedavi onaylanan olarak geri alınacak. Emin misiniz?`)) return;
+    try {
+      const promises = selectedCompletedTreatments.map(treatmentId =>
+        fetch(`https://dentalapi.karadenizdis.com/api/treatment/${treatmentId}/status`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'onaylanan' })
+        }).then(res => res.json())
+      );
+      const results = await Promise.all(promises);
+      const allSuccessful = results.every(result => result.success);
+      if (allSuccessful) {
+        alert(`${selectedCompletedTreatments.length} tedavi başarıyla onaylanan olarak geri alındı!`);
+        // Tedavi listesini yenile
+        const treatmentsRes = await fetch(`https://dentalapi.karadenizdis.com/api/treatment/patient/${patientId}`);
+        const treatmentsData = await treatmentsRes.json();
+        if (treatmentsData.success) {
+          setTreatments(treatmentsData.data);
+        }
+        setSelectedCompletedTreatments([]);
+      } else {
+        alert("Bazı tedaviler geri alınamadı. Lütfen tekrar deneyin.");
+      }
+    } catch (error) {
+      console.error('Undo completed treatments error:', error);
+      alert("Tedaviler geri alınırken hata oluştu");
+    }
+  };
   const [completingTreatments, setCompletingTreatments] = useState(false);
   const [role, setRole] = useState<string>("");
   const [branchId, setBranchId] = useState<number>(1);
@@ -783,24 +827,35 @@ export default function PatientCardPageClient() {
           </div>
         </div>
       )}
-            <div style={{ display: "flex", gap: 32, flexWrap: "wrap" }}>
+            <div className="patient-card-main-grid" style={{ display: "flex", gap: 32, flexWrap: "wrap", alignItems: 'flex-start', animation: 'fadeIn .5s cubic-bezier(.4,2,.6,1)' }}>
               {/* Hasta Bilgileri Kartı */}
-              <div style={{ background: "#fff", borderRadius: 16, boxShadow: "0 2px 8px #0001", padding: 24, minWidth: 260, maxWidth: 320, height: 420, flex: "1 1 260px", display: "flex", flexDirection: "column", gap: 12, position: "relative" }}>
-                <div style={{ fontWeight: 700, fontSize: 18, color: "#0a2972" }}>
+              <div className="patient-info-card animated-card" style={{ background: "linear-gradient(120deg, #fafdff 60%, #e3eaff 100%)", borderRadius: 22, boxShadow: "0 8px 32px #0d1a4a22, 0 1.5px 0 #1976d2", padding: 28, minWidth: 260, maxWidth: 340, height: 440, flex: "1 1 260px", display: "flex", flexDirection: "column", gap: 14, position: "relative", border: '2px solid #1976d2', transition: 'box-shadow .22s, transform .22s', animation: 'popIn .6s cubic-bezier(.4,2,.6,1)' }}>
+                <div style={{ fontWeight: 900, fontSize: 22, color: "#1976d2", letterSpacing: 0.2, textShadow: "0 2px 8px #e3eaff77", display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#1976d2" opacity="0.12"/><path d="M12 12c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V20h14v-2.5c0-2.33-4.67-3.5-7-3.5z" fill="#1976d2"/></svg>
                   {patient.first_name} {patient.last_name}
                 </div>
-                <div style={{ fontSize: 15, color: "#2d3a4a" }}>
+                <div style={{ fontSize: 15, color: "#6073a6", fontWeight: 700, marginBottom: 2 }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{marginRight:4,verticalAlign:'middle'}}><circle cx="12" cy="12" r="12" fill="#1976d2" opacity="0.10"/><path d="M12 12c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V20h14v-2.5c0-2.33-4.67-3.5-7-3.5z" fill="#1976d2"/></svg>
                   İlgili doktor(lar): {doctorNames.length > 0 ? doctorNames.join(", ") : "-"}
                 </div>
-                <div style={{ fontSize: 15, color: "#2d3a4a" }}>TC No: {role === 'doctor' ? '•••' : (patient.tc_number || "-")}</div>
-                <div style={{ fontSize: 15, color: "#2d3a4a" }}>Tel: {role === 'doctor' ? '•••' : (patient.phone || "-")}</div>
-                <div style={{ fontSize: 15, color: "#2d3a4a" }}>Doğum Tarihi: {patient.birth_date ? patient.birth_date.slice(0,10) : "-"}</div>
+                <div style={{ fontSize: 15, color: "#2d3a4a", display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#1976d2" opacity="0.10"/><path d="M12 12c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V20h14v-2.5c0-2.33-4.67-3.5-7-3.5z" fill="#1976d2"/></svg>
+                  TC No: {role === 'doctor' ? '•••' : (patient.tc_number || "-")}
+                </div>
+                <div style={{ fontSize: 15, color: "#2d3a4a", display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#1976d2" opacity="0.10"/><path d="M17 10.5c0-2.49-2.01-4.5-4.5-4.5S8 8.01 8 10.5c0 2.49 2.01 4.5 4.5 4.5s4.5-2.01 4.5-4.5zM12 2C6.48 2 2 6.48 2 12c0 5.52 4.48 10 10 10s10-4.48 10-10c0-5.52-4.48-10-10-10zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" fill="#1976d2"/></svg>
+                  Tel: {role === 'doctor' ? '•••' : (patient.phone || "-")}
+                </div>
+                <div style={{ fontSize: 15, color: "#2d3a4a", display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#1976d2" opacity="0.10"/><path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm0 10c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6z" fill="#1976d2"/></svg>
+                  Doğum Tarihi: {patient.birth_date ? patient.birth_date.slice(0,10) : "-"}
+                </div>
                 {/* Hasta Notları Açılır Alan */}
-                <div style={{ fontSize: 15, color: "#2d3a4a", marginTop: 8, cursor: "pointer", fontWeight: 600 }} onClick={() => setNotesOpen(v => !v)}>
-                  Notlar {notesOpen ? "▲" : "▼"}
+                <div style={{ fontSize: 15, color: "#2d3a4a", marginTop: 8, cursor: "pointer", fontWeight: 700, transition: 'color .18s' }} onClick={() => setNotesOpen(v => !v)}>
+                  <span style={{ transition: 'transform .18s', display: 'inline-block', transform: notesOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>▼</span> Notlar
                 </div>
                 {notesOpen && (
-                  <div style={{ fontSize: 14, color: "#444", marginLeft: 12, maxHeight: 120, overflowY: "auto", marginTop: 4, border: "1px solid #e5e7eb", borderRadius: 8, padding: 8, background: "#f8fafc" }}>
+                  <div style={{ fontSize: 14, color: "#444", marginLeft: 12, maxHeight: 120, overflowY: "auto", marginTop: 4, border: "1.5px solid #e3eaff", borderRadius: 10, padding: 10, background: "#fafdff", boxShadow: '0 2px 8px #e3eaff33', animation: 'fadeIn .3s' }}>
                     <ul style={{ margin: 0, padding: 0, listStyle: 'disc inside' }}>
                       {patientNotes.length === 0 ? <li>Not yok</li> : patientNotes.map((n, i) => (
                         <li key={n.note_id}>
@@ -810,16 +865,46 @@ export default function PatientCardPageClient() {
                     </ul>
                   </div>
                 )}
-                <div style={{ fontSize: 15, color: "#2d3a4a", marginTop: 8, cursor: "pointer", fontWeight: 600 }} onClick={() => setAnamnesisOpen(v => !v)}>
-                  Anamnez {anamnesisOpen ? "▲" : "▼"}
+                <div style={{ fontSize: 15, color: "#2d3a4a", marginTop: 8, cursor: "pointer", fontWeight: 700, transition: 'color .18s' }} onClick={() => setAnamnesisOpen(v => !v)}>
+                  <span style={{ transition: 'transform .18s', display: 'inline-block', transform: anamnesisOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>▼</span> Anamnez
                 </div>
                 {anamnesisOpen && (
-                  <div style={{ fontSize: 14, color: "#444", marginLeft: 12, maxHeight: 120, overflowY: "auto", marginTop: 4, border: "1px solid #e5e7eb", borderRadius: 8, padding: 8, background: "#f8fafc" }}>
+                  <div style={{ fontSize: 14, color: "#444", marginLeft: 12, maxHeight: 120, overflowY: "auto", marginTop: 4, border: "1.5px solid #e3eaff", borderRadius: 10, padding: 10, background: "#fafdff", boxShadow: '0 2px 8px #e3eaff33', animation: 'fadeIn .3s' }}>
                     <ul style={{ margin: 0, padding: 0, listStyle: 'disc inside' }}>
                       {anamnesis.length === 0 ? <li>Yok</li> : anamnesis.map((a, i) => <li key={i}>{a.question}: {a.answer_text || (a.answer_boolean ? "Evet" : "Hayır")}</li>)}
                     </ul>
                   </div>
                 )}
+            {/* Animasyonlar ve responsive stiller */}
+            <style jsx global>{`
+              @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(24px); }
+                to { opacity: 1; transform: none; }
+              }
+              @keyframes popIn {
+                from { opacity: 0; transform: scale(0.95); }
+                to { opacity: 1; transform: scale(1); }
+              }
+              .animated-card {
+                transition: box-shadow .22s, transform .22s;
+              }
+              .animated-card:hover {
+                box-shadow: 0 12px 40px #1976d244, 0 2px 0 #1976d2;
+                transform: translateY(-2px) scale(1.025);
+              }
+              @media (max-width: 640px) {
+                .patient-card-main-grid { flex-direction: column !important; gap: 16px !important; }
+                .patient-info-card { min-width: 0 !important; max-width: 100vw !important; height: auto !important; padding: 16px !important; }
+                .pc-actions { gap: 10px !important; }
+                .pc-actions .pc-btn { padding: 6px 12px !important; font-size: 13px !important; }
+                .pc-lists { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important; gap: 10px !important; width: 100% !important; }
+                .pc-list-card { padding: 10px !important; min-height: 220px !important; }
+                .pc-list-title { font-size: 13px !important; margin-bottom: 6px !important; }
+                .pc-list-content { padding: 8px !important; min-height: 120px !important; }
+                .pc-list-item { margin-bottom: 6px !important; padding: 4px !important; font-size: 12px !important; }
+                .pc-list-total { font-size: 13px !important; }
+              }
+            `}</style>
               </div>
               {/* Tedavi Bölümleri - 3 sütunlu responsive grid */}
               <div className="pc-lists" style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", flex: "3 1 600px" }}>
@@ -969,9 +1054,9 @@ export default function PatientCardPageClient() {
                   )}
                 </div>
                 {/* Onaylanan Tedaviler */}
-                <div className="pc-list-card" style={{ background: "#f8fafc", borderRadius: 24, border: "1.5px solid #b6c6e6", boxShadow: "0 2px 8px #e3eaff", padding: 24, minHeight: 340, display: "flex", flexDirection: "column", alignItems: "center" }}>
-                  <div className="pc-list-title" style={{ fontWeight: 700, fontSize: 16, color: "#1976d2", marginBottom: 8, borderBottom: "1px solid #dbeafe", width: "100%", textAlign: "center", borderTopLeftRadius: 18, borderTopRightRadius: 18 }}>Onaylanan Tedaviler</div>
-                  <div className="pc-list-content" style={{ flex: 1, width: "100%", background: "#fffbea", borderRadius: 12, padding: 16, minHeight: 200, display: "flex", flexDirection: "column" }}>
+                <div className="pc-list-card animated-card" style={{ background: "linear-gradient(120deg, #fafdff 60%, #e3eaff 100%)", borderRadius: 24, border: "2px solid #1976d2", boxShadow: "0 8px 32px #0d1a4a22, 0 1.5px 0 #1976d2", padding: 28, minHeight: 340, display: "flex", flexDirection: "column", alignItems: "center", animation: 'fadeIn .5s cubic-bezier(.4,2,.6,1)' }}>
+                  <div className="pc-list-title" style={{ fontWeight: 900, fontSize: 18, color: "#1976d2", marginBottom: 12, borderBottom: "1.5px solid #e3eaff", width: "100%", textAlign: "center", borderTopLeftRadius: 18, borderTopRightRadius: 18, letterSpacing: 0.2, textShadow: "0 2px 8px #e3eaff77", paddingBottom: 6, background: 'linear-gradient(90deg, #e3eaff33 0%, #fafdff 100%)' }}>Onaylanan Tedaviler</div>
+                  <div className="pc-list-content" style={{ flex: 1, width: "100%", background: "#fffbea", borderRadius: 14, padding: 18, minHeight: 200, display: "flex", flexDirection: "column", boxShadow: '0 2px 8px #e3eaff33', animation: 'fadeIn .6s' }}>
                     {treatments.filter((x: any) => ['onaylanan','tamamlanan'].includes(x.status)).length === 0 ? (
                       <div style={{ color: "#888", textAlign: "center", flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>Yok</div>
                     ) : (
@@ -1107,52 +1192,88 @@ export default function PatientCardPageClient() {
                   )}
                 </div>
                 {/* Tamamlanan Tedaviler */}
-                <div className="pc-list-card" style={{ background: "#f8fafc", borderRadius: 24, border: "1.5px solid #b6c6e6", boxShadow: "0 2px 8px #e3eaff", padding: 24, minHeight: 340, display: "flex", flexDirection: "column", alignItems: "center" }}>
-                  <div className="pc-list-title" style={{ fontWeight: 700, fontSize: 16, color: "#388e3c", marginBottom: 8, borderBottom: "1px solid #dbeafe", width: "100%", textAlign: "center", borderTopLeftRadius: 18, borderTopRightRadius: 18 }}>Biten Tedaviler</div>
-                  <div className="pc-list-content" style={{ flex: 1, width: "100%", background: "#fffbea", borderRadius: 12, padding: 16, minHeight: 240 }}>
+                <div className="pc-list-card animated-card" style={{ background: "linear-gradient(120deg, #fafdff 60%, #e3eaff 100%)", borderRadius: 24, border: "2px solid #388e3c", boxShadow: "0 8px 32px #0d1a4a22, 0 1.5px 0 #388e3c", padding: 28, minHeight: 340, display: "flex", flexDirection: "column", alignItems: "center", animation: 'fadeIn .5s cubic-bezier(.4,2,.6,1)' }}>
+                  <div className="pc-list-title" style={{ fontWeight: 900, fontSize: 18, color: "#388e3c", marginBottom: 12, borderBottom: "1.5px solid #e3eaff", width: "100%", textAlign: "center", borderTopLeftRadius: 18, borderTopRightRadius: 18, letterSpacing: 0.2, textShadow: "0 2px 8px #e3eaff77", paddingBottom: 6, background: 'linear-gradient(90deg, #e3eaff33 0%, #fafdff 100%)' }}>Biten Tedaviler</div>
+                  <div className="pc-list-content" style={{ flex: 1, width: "100%", background: "#fffbea", borderRadius: 14, padding: 18, minHeight: 240, boxShadow: '0 2px 8px #e3eaff33', animation: 'fadeIn .6s' }}>
                     {completedTreatments.length === 0 ? (
                       <div style={{ color: "#888", textAlign: "center" }}>Yok</div>
                     ) : (
-                      <ul style={{ fontSize: 15, color: "#2d3a4a", paddingLeft: 12 }}>
+                      <div style={{ flex: 1, fontSize: 15, color: "#2d3a4a" }}>
                         {completedTreatments.map((tr: any) => {
                           const type = treatmentTypes.find((tt: any) => tt.treatment_type_id === tr.treatment_type_id);
                           const treatmentName = type ? type.name : "Bilinmeyen Tedavi";
                           const toothNumbers = tr.tooth_numbers || tr.toothNumbers || [];
+                          const isSelected = selectedCompletedTreatments.includes(tr.treatment_id);
                           return (
-                            <li key={tr.treatment_id}>
-                              {treatmentName}
-                              {/* Doktor adı küçük ve belirgin şekilde */}
-                              {tr.doctor_name && (
-                                <span style={{ color: '#1976d2', fontSize: 11, fontWeight: 500, marginLeft: 6 }}>
-                                  • {tr.doctor_name}
-                                </span>
-                              )}
-                              {Array.isArray(toothNumbers) && toothNumbers.length > 0 && (
-                                <span style={{ color: "#666", fontSize: 13 }}> (Dişler: {toothNumbers.join(", ")})</span>
-                              )}
-                            </li>
+                            <div
+                              key={tr.treatment_id}
+                              className="pc-list-item"
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 8,
+                                marginBottom: 8,
+                                padding: "6px",
+                                borderRadius: 6,
+                                background: isSelected ? "#e3f2fd" : "#fff",
+                                cursor: "pointer",
+                                border: isSelected ? "1px solid #1976d2" : "1px solid #b6c6e6",
+                                justifyContent: 'space-between',
+                                fontWeight: 700,
+                                color: '#388e3c',
+                                fontSize: 15,
+                                transition: 'box-shadow .18s, border .18s, background .18s, transform .18s'
+                              }}
+                              onClick={() => toggleCompletedTreatmentSelection(tr.treatment_id)}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={e => { e.stopPropagation(); toggleCompletedTreatmentSelection(tr.treatment_id); }}
+                                style={{ cursor: "pointer" }}
+                              />
+                              <span>
+                                {treatmentName}
+                                {tr.doctor_name && (
+                                  <span style={{ color: '#1976d2', fontSize: 12, fontWeight: 700, marginLeft: 6 }}>• {tr.doctor_name}</span>
+                                )}
+                                {Array.isArray(toothNumbers) && toothNumbers.length > 0 && (
+                                  <span style={{ color: "#666", fontSize: 13 }}> (Dişler: {toothNumbers.join(", ")})</span>
+                                )}
+                              </span>
+                            </div>
                           );
                         })}
-                      </ul>
+                      </div>
                     )}
                   </div>
+                  {/* Geri Al (Onaylanan'a çek) butonu */}
+                  {completedTreatments.length > 0 && (
+                    <div style={{ width: "100%", paddingTop: 16, borderTop: "1px solid #e0e0e0" }}>
+                      <button
+                        onClick={handleUndoCompletedTreatments}
+                        disabled={selectedCompletedTreatments.length === 0}
+                        style={{
+                          background: selectedCompletedTreatments.length === 0 ? "#ccc" : "#1976d2",
+                          color: "white",
+                          border: "none",
+                          borderRadius: 8,
+                          padding: "10px 20px",
+                          fontSize: 14,
+                          fontWeight: 600,
+                          cursor: selectedCompletedTreatments.length === 0 ? "not-allowed" : "pointer",
+                          width: "100%",
+                          marginTop: 8
+                        }}
+                      >
+                        {`Geri Al (${selectedCompletedTreatments.length})`}
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
-            {/* Mobile-only tweaks to keep desktop/tablet unchanged */}
-            <style jsx global>{`
-              @media (max-width: 640px) {
-                .pc-actions { gap: 10px !important; }
-                .pc-actions .pc-btn { padding: 6px 12px !important; font-size: 13px !important; }
-                /* Let lists wrap: use auto-fit with a minimum card width so extras drop below */
-                .pc-lists { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important; gap: 10px !important; width: 100% !important; }
-                .pc-list-card { padding: 10px !important; min-height: 220px !important; }
-                .pc-list-title { font-size: 13px !important; margin-bottom: 6px !important; }
-                .pc-list-content { padding: 8px !important; min-height: 120px !important; }
-                .pc-list-item { margin-bottom: 6px !important; padding: 4px !important; font-size: 12px !important; }
-                .pc-list-total { font-size: 13px !important; }
-              }
-            `}</style>
+            {/* Mobile-only tweaks kaldırıldı, yukarıya taşındı */}
             {/* Randevu Geçmişi */}
             <div style={{ marginTop: 40, width: "100%" }}>
               <div style={{ fontWeight: 700, color: "#2d3a4a", marginBottom: 10, fontSize: 18 }}>Randevu Geçmişi</div>

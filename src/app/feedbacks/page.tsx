@@ -395,7 +395,7 @@ export default function FeedbacksPage() {
                                   marginLeft: "12px"
                                 }}
                               >
-                                Kaydet
+                                Geri Dönüş Yaz
                               </button>
                             </div>
                           ))}
@@ -451,7 +451,7 @@ export default function FeedbacksPage() {
                 <p>Geri dönüş geçmişi bulunmuyor.</p>
               </div>
             ) : (
-              <div className="grid-auto-cards" style={{ gap: "16px" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "18px", width: "100%" }}>
                 {feedbackHistory.map((patient) => (
                   <PatientHistoryCard key={patient.patient_id} patient={patient} />
                 ))}
@@ -571,6 +571,39 @@ export default function FeedbacksPage() {
 
 // Hasta geçmişi kartı komponenti
 function PatientHistoryCard({ patient }: { patient: FeedbackHistory }) {
+  const [editModal, setEditModal] = useState<{ open: boolean; feedback: any | null }>({ open: false, feedback: null });
+  const [editNote, setEditNote] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  // Feedback güncelleme fonksiyonu
+  const handleEditSave = async () => {
+    if (!editModal.feedback) return;
+    setSaving(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`https://dentalapi.karadenizdis.com/api/feedback/${editModal.feedback.feedback_id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ notes: editNote })
+      });
+      const data = await res.json();
+      if (data.success) {
+        // Güncellenen feedback'i localde değiştir
+        if (typeof window !== "undefined") {
+          editModal.feedback.notes = editNote;
+        }
+        setEditModal({ open: false, feedback: null });
+      } else {
+        alert(data.message || "Güncelleme başarısız");
+      }
+    } catch (e) {
+      alert("Sunucu hatası: " + e);
+    }
+    setSaving(false);
+  };
   const [selectedInterval, setSelectedInterval] = useState<string>('all');
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   
@@ -604,48 +637,70 @@ function PatientHistoryCard({ patient }: { patient: FeedbackHistory }) {
       overflow: "hidden"
     }}>
       {/* Hasta Başlığı */}
-      <div 
+      <div
         onClick={() => setIsExpanded(!isExpanded)}
         style={{
-          background: "#f8f9fa",
-          padding: "16px",
+          background: isExpanded ? "#f0f4ff" : "#f8f9fa",
+          padding: "8px 12px",
           borderBottom: isExpanded ? "1px solid #e1e5e9" : "none",
           cursor: "pointer",
-          transition: "background-color 0.2s"
+          transition: "background 0.18s, box-shadow 0.18s, transform 0.12s",
+          boxShadow: isExpanded ? "0 2px 8px 0 rgba(30,34,90,0.06)" : "none",
+          borderRadius: isExpanded ? "8px 8px 0 0" : "8px",
+          minHeight: 0
         }}
-        onMouseEnter={(e) => (e.target as HTMLElement).style.backgroundColor = "#e9ecef"}
-        onMouseLeave={(e) => (e.target as HTMLElement).style.backgroundColor = "#f8f9fa"}
+        onMouseEnter={e => {
+          (e.currentTarget as HTMLElement).style.background = "#f0f4ff";
+          (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 8px 0 rgba(30,34,90,0.08)";
+          (e.currentTarget as HTMLElement).style.transform = "scale(1.012)";
+        }}
+        onMouseLeave={e => {
+          (e.currentTarget as HTMLElement).style.background = isExpanded ? "#f0f4ff" : "#f8f9fa";
+          (e.currentTarget as HTMLElement).style.boxShadow = isExpanded ? "0 2px 8px 0 rgba(30,34,90,0.06)" : "none";
+          (e.currentTarget as HTMLElement).style.transform = "scale(1)";
+        }}
+        onMouseDown={e => {
+          (e.currentTarget as HTMLElement).style.transform = "scale(0.98)";
+        }}
+        onMouseUp={e => {
+          (e.currentTarget as HTMLElement).style.transform = "scale(1.012)";
+        }}
       >
         <div style={{ 
           display: "flex", 
           justifyContent: "space-between", 
           alignItems: "center",
-          marginBottom: isExpanded ? "12px" : "0"
+          marginBottom: isExpanded ? "6px" : "0"
         }}>
-          <div style={{ flex: 1 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
             <h3 style={{ 
-              margin: "0 0 4px 0", 
+              margin: "0 0 2px 0", 
               color: "#2c3e50",
-              fontSize: "18px"
+              fontSize: "15px",
+              fontWeight: 600,
+              lineHeight: 1.2,
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis"
             }}>
               {patient.patient_name}
             </h3>
             <div style={{
-              fontSize: "12px",
-              color: "#666",
-              textAlign: "right"
+              fontSize: "11px",
+              color: "#888",
+              textAlign: "right",
+              lineHeight: 1.1
             }}>
-              Son geri dönüş:<br/>
-              {formatDate(patient.last_feedback_date)}
+              Son geri dönüş: {formatDate(patient.last_feedback_date)}
             </div>
-            <div style={{
-              fontSize: "20px",
-              color: "#666",
-              transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)",
-              transition: "transform 0.3s ease"
-            }}>
-              ▼
-            </div>
+          </div>
+          <div style={{
+            fontSize: "18px",
+            color: "#666",
+            transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)",
+            transition: "transform 0.3s ease"
+          }}>
+            ▼
           </div>
         </div>
 
@@ -684,80 +739,128 @@ function PatientHistoryCard({ patient }: { patient: FeedbackHistory }) {
 
       {/* Geri Dönüş Listesi - sadece açık olduğunda göster */}
       {isExpanded && (
-        <div style={{ padding: "16px" }}>
-        {filteredFeedbacks.length === 0 ? (
-          <div style={{ 
-            textAlign: "center", 
-            padding: "20px", 
-            color: "#666",
-            fontSize: "14px"
+        <div style={{ padding: "8px 0 0 0" }}>
+          {filteredFeedbacks.length === 0 ? (
+            <div style={{ 
+              textAlign: "center", 
+              padding: "20px", 
+              color: "#888",
+              fontSize: "14px"
+            }}>
+              {selectedInterval === 'all' 
+                ? 'Bu hasta için geri dönüş kaydı bulunmuyor.' 
+                : 'Seçilen interval için geri dönüş kaydı bulunmuyor.'}
+            </div>
+          ) : (
+            <div style={{ width: "100%", overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", background: "#fff" }}>
+                <thead>
+                  <tr style={{ background: "#f7f8fa", color: "#222", fontSize: 13, fontWeight: 600 }}>
+                    <th style={{ padding: "8px 6px", borderBottom: "1px solid #ececec", textAlign: "left", width: 36 }}>#</th>
+                    <th style={{ padding: "8px 6px", borderBottom: "1px solid #ececec", textAlign: "left" }}>Tedavi</th>
+                    <th style={{ padding: "8px 6px", borderBottom: "1px solid #ececec", textAlign: "left" }}>Interval</th>
+                    <th style={{ padding: "8px 6px", borderBottom: "1px solid #ececec", textAlign: "left" }}>Tarih</th>
+                    <th style={{ padding: "8px 6px", borderBottom: "1px solid #ececec", textAlign: "left" }}>Not</th>
+                    <th style={{ padding: "8px 6px", borderBottom: "1px solid #ececec", textAlign: "center", width: 48 }}></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredFeedbacks.map((feedback, idx) => (
+                    <tr key={feedback.feedback_id} style={{ borderBottom: "1px solid #f0f0f0", background: idx % 2 === 0 ? "#fff" : "#fafbfc", transition: "background 0.2s" }}>
+                      <td style={{ padding: "10px 6px", color: "#888", fontSize: 13 }}>{idx + 1}</td>
+                      <td style={{ padding: "10px 6px", color: "#222", fontSize: 14, fontWeight: 500 }}>
+                        🦷 {feedback.treatment_name}
+                      </td>
+                      <td style={{ padding: "10px 6px" }}>
+                        <span style={{
+                          background: "#e3e7fa",
+                          color: "#1a237e",
+                          padding: "2px 10px",
+                          borderRadius: "12px",
+                          fontSize: "11px",
+                          fontWeight: 500
+                        }}>
+                          {feedback.interval_display}
+                        </span>
+                      </td>
+                      <td style={{ padding: "10px 6px", color: "#8a8fa3", fontSize: 13 }}>
+                        {formatDate(feedback.feedback_date)}
+                      </td>
+                      <td style={{ padding: "10px 6px", color: feedback.notes ? "#555" : "#bbb", fontSize: 13, maxWidth: 220, whiteSpace: "pre-line", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {feedback.notes || <span style={{ color: "#ccc" }}>-</span>}
+                      </td>
+                      <td style={{ padding: "10px 6px", textAlign: "center" }}>
+                        <button
+                          style={{
+                            background: "#f0f4ff",
+                            border: "1px solid #c3d0f7",
+                            color: "#1a237e",
+                            borderRadius: "6px",
+                            padding: "4px 10px",
+                            fontSize: "13px",
+                            cursor: "pointer",
+                            transition: "background 0.15s, border 0.15s"
+                          }}
+                          onClick={() => {
+                            setEditModal({ open: true, feedback });
+                            setEditNote(feedback.notes || "");
+                          }}
+                          title="Geri dönüşü düzenle"
+                        >
+                          Düzenle
+                        </button>
+                      </td>
+      {/* Düzenleme Modalı */}
+      {editModal.open && (
+        <div style={{
+          position: "fixed",
+          top: 0, left: 0, right: 0, bottom: 0,
+          background: "rgba(0,0,0,0.25)",
+          zIndex: 1000,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center"
+        }}>
+          <div style={{
+            background: "#fff",
+            borderRadius: 10,
+            minWidth: 320,
+            maxWidth: 400,
+            boxShadow: "0 4px 24px 0 rgba(30,34,90,0.13)",
+            padding: 24,
+            display: "flex",
+            flexDirection: "column",
+            gap: 12
           }}>
-            {selectedInterval === 'all' 
-              ? 'Bu hasta için geri dönüş kaydı bulunmuyor.' 
-              : 'Seçilen interval için geri dönüş kaydı bulunmuyor.'}
+            <h4 style={{ margin: 0, fontSize: 18, color: "#1a237e" }}>Geri Dönüş Notunu Düzenle</h4>
+            <textarea
+              value={editNote}
+              onChange={e => setEditNote(e.target.value)}
+              rows={4}
+              style={{ width: "100%", fontSize: 14, borderRadius: 6, border: "1px solid #c3d0f7", padding: 8, resize: "vertical" }}
+              autoFocus
+            />
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+              <button
+                onClick={() => setEditModal({ open: false, feedback: null })}
+                style={{ padding: "6px 16px", borderRadius: 6, border: "1px solid #eee", background: "#f7f8fa", color: "#333", cursor: saving ? "not-allowed" : "pointer" }}
+                disabled={saving}
+              >İptal</button>
+              <button
+                onClick={handleEditSave}
+                style={{ padding: "6px 16px", borderRadius: 6, border: "1px solid #1a237e", background: "#1a237e", color: "#fff", fontWeight: 600, cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.7 : 1 }}
+                disabled={saving}
+              >Kaydet</button>
+            </div>
           </div>
-        ) : (
-          <div style={{ display: "grid", gap: "12px" }}>
-            {filteredFeedbacks.map(feedback => (
-              <div
-                key={feedback.feedback_id}
-                style={{
-                  border: "1px solid #f0f0f0",
-                  borderRadius: "6px",
-                  padding: "12px",
-                  background: "#fafafa"
-                }}
-              >
-                <div style={{ 
-                  display: "flex", 
-                  justifyContent: "space-between", 
-                  alignItems: "flex-start",
-                  marginBottom: "8px"
-                }}>
-                  <div>
-                    <span style={{
-                      background: "#1a237e",
-                      color: "white",
-                      padding: "2px 8px",
-                      borderRadius: "12px",
-                      fontSize: "11px",
-                      fontWeight: "bold"
-                    }}>
-                      {feedback.interval_display}
-                    </span>
-                    <p style={{ 
-                      margin: "6px 0 0 0", 
-                      color: "#666",
-                      fontSize: "13px"
-                    }}>
-                      🦷 {feedback.treatment_name}
-                    </p>
-                  </div>
-                  <div style={{ 
-                    textAlign: "right",
-                    fontSize: "12px",
-                    color: "#999"
-                  }}>
-                    {formatDate(feedback.feedback_date)}
-                  </div>
-                </div>
-                
-                {feedback.notes && (
-                  <div style={{
-                    background: "#fff",
-                    padding: "8px",
-                    borderRadius: "4px",
-                    border: "1px solid #eee",
-                    fontSize: "13px",
-                    color: "#555"
-                  }}>
-                    <strong>Not:</strong> {feedback.notes}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
+        </div>
+      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
     </div>

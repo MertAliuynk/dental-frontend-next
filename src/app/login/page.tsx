@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import LoginAnimatedArt from "./LoginAnimatedArt";
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
@@ -199,6 +200,7 @@ export default function LoginPage() {
           width: "100%"
         }}
       >
+        <LoginAnimatedArt />
         <h2 style={{ textAlign: "center", marginBottom: 24, color: "#1976d2" }}>Giriş Yap</h2>
         <div style={{ marginBottom: 18 }}>
           <label style={{ fontWeight: 500, color: "#2d3a4a" }}>Kullanıcı Adı</label>
