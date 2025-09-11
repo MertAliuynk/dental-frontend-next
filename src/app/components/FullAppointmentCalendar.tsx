@@ -554,7 +554,7 @@ export default function FullAppointmentCalendar() {
   return (
   <div style={{ minHeight: '100vh', background: '#f5f7fb', overflowX: 'auto', maxWidth: '100vw', boxSizing: 'border-box', padding: 0 }}>
       {/* Top bar */}
-      <div style={{ position: 'sticky', top: 0, zIndex: 10, background: '#fff', borderBottom: '1px solid #e5e7eb', overflowX: 'auto', maxWidth: '100vw', boxSizing: 'border-box' }}>
+      <div style={{ position: 'sticky', top: 0, zIndex: 20, background: '#fff', borderBottom: '1px solid #e5e7eb', overflowX: 'auto', maxWidth: '100vw', boxSizing: 'border-box' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', flexWrap: 'wrap', minWidth: 260, maxWidth: '100vw', boxSizing: 'border-box' }}>
           
           <button aria-label="menu" onClick={() => setSidebarOpen(true)} style={{ width: 40, height: 40, borderRadius: 10, border: '2px solid #1f3755', background: '#1f3755', color: '#fff', cursor: 'pointer', fontWeight: 900 }}>

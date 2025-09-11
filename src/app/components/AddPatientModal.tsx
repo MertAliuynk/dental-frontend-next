@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-export default function AddPatientModal({ open, onClose, doctors, onSave }: { open: boolean, onClose: () => void, doctors: any[], onSave: (data: any) => void }) {
+export default function AddPatientModal({ open, onClose, doctors, onSave, zIndex }: { open: boolean, onClose: () => void, doctors: any[], onSave: (data: any) => void, zIndex?: number }) {
   const [form, setForm] = useState({
     firstName: '',
     lastName: '',
@@ -18,7 +18,7 @@ export default function AddPatientModal({ open, onClose, doctors, onSave }: { op
   if (!open && !addedPatient) return null;
 
   return (
-  <div style={{ position: 'fixed', inset: 0, zIndex: 999999, background: 'rgba(0,0,0,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+  <div style={{ position: 'fixed', inset: 0, zIndex: zIndex ?? 999999, background: 'rgba(0,0,0,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ background: '#fff', borderRadius: 12, padding: 28, minWidth: 340, maxWidth: 400, width: '100%', boxShadow: '0 2px 16px #0003' }}>
         <h3 style={{ marginBottom: 16, color: '#0a2972', fontWeight: 900, fontSize: 22, letterSpacing: '0.5px' }}>Hasta Ekle</h3>
         <div style={{ display: 'grid', gap: 14 }}>
