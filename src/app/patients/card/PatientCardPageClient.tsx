@@ -86,7 +86,6 @@ export default function PatientCardPageClient() {
       const results = await Promise.all(promises);
       const allSuccessful = results.every(result => result.success);
       if (allSuccessful) {
-        alert(`${selectedCompletedTreatments.length} tedavi başarıyla onaylanan olarak geri alındı!`);
         // Tedavi listesini yenile
         const treatmentsRes = await fetch(`https://dentalapi.karadenizdis.com/api/treatment/patient/${patientId}`);
         const treatmentsData = await treatmentsRes.json();
@@ -261,7 +260,7 @@ export default function PatientCardPageClient() {
       const allSuccessful = results.every(result => result.success);
       
       if (allSuccessful) {
-        alert(`${selectedTreatments.length} tedavi başarıyla onaylandı!`);
+        
         
         // Tedavi listesini yenile
   const treatmentsRes = await fetch(`https://dentalapi.karadenizdis.com/api/treatment/patient/${patientId}`);
@@ -308,7 +307,7 @@ export default function PatientCardPageClient() {
       const allSuccessful = results.every(result => result.success);
       
       if (allSuccessful) {
-        alert(`${selectedApprovedTreatments.length} tedavi başarıyla tamamlandı!`);
+        
         
         // Tedavi listesini yenile
   const treatmentsRes = await fetch(`https://dentalapi.karadenizdis.com/api/treatment/patient/${patientId}`);
@@ -367,7 +366,7 @@ export default function PatientCardPageClient() {
       const results = await Promise.all(promises);
       const allSuccessful = results.every(result => result.success);
       if (allSuccessful) {
-        alert(`${selectedTreatments.length} tedavi başarıyla silindi!`);
+        
         // Tedavi listesini yenile
         const treatmentsRes = await fetch(`https://dentalapi.karadenizdis.com/api/treatment/patient/${patientId}`);
         const treatmentsData = await treatmentsRes.json();
@@ -400,7 +399,7 @@ export default function PatientCardPageClient() {
       const results = await Promise.all(promises);
       const allSuccessful = results.every(result => result.success);
       if (allSuccessful) {
-        alert(`${selectedApprovedTreatments.length} tedavi başarıyla önerilen olarak geri alındı!`);
+        
         // Tedavi listesini yenile
         const treatmentsRes = await fetch(`https://dentalapi.karadenizdis.com/api/treatment/patient/${patientId}`);
         const treatmentsData = await treatmentsRes.json();
@@ -702,7 +701,7 @@ export default function PatientCardPageClient() {
                       setAddNoteValue("");
                       // Yeni notu en üste ekle
                       setPatientNotes(prev => [{ ...data.data }, ...prev]);
-                      alert('Not eklendi!');
+                      
                     } else {
                       alert(data.message || 'Ekleme başarısız!');
                     }

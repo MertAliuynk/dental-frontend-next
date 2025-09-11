@@ -236,7 +236,7 @@ function TreatmentAddPageClient() {
         const j = await res.json();
         if (!res.ok || !j?.success) throw new Error(j?.message || "Hata");
       }
-      alert("Tüm tedaviler önerildi");
+      
       setPending([]);
       // Redirect to patient card after suggesting
       if (patient?.patient_id) {
