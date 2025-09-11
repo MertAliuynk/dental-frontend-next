@@ -255,7 +255,7 @@ export default function FullAppointmentCalendar() {
         if (a.status_tr) {
           if (a.status_tr.toLowerCase().includes('tamamlandı') || a.status_tr.toLowerCase().includes('geldi')) {
             statusIcon = '🟢';
-          } else if (a.status_tr.toLowerCase().includes('planlandı')) {
+          } else if (a.status_tr.toLowerCase().includes('bekleniyor')) {
             statusIcon = '�';
           }
         }
