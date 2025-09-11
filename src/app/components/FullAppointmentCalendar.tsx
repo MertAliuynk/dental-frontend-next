@@ -7,11 +7,13 @@
 
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import PatientSelectModal from './PatientSelectModal';
+import { useRouter } from "next/navigation";
 import AddPatientModal from './AddPatientModal';
 import Sidebar from './Sidebar';
 import { Calendar, dateFnsLocalizer, Event } from 'react-big-calendar';
 import withDragAndDrop from 'react-big-calendar/lib/addons/dragAndDrop';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
+import './FullAppointmentCalendar.custom.css';
 import 'react-big-calendar/lib/addons/dragAndDrop/styles.css';
 import { format, parse, startOfWeek, endOfWeek, startOfMonth, endOfMonth, addDays, getDay } from 'date-fns';
 import { tr } from 'date-fns/locale';
@@ -26,7 +28,13 @@ interface CalendarEvent extends Event {
 }
 
 const locales = { 'tr-TR': tr };
-const localizer = dateFnsLocalizer({ format, parse, startOfWeek: () => 1, getDay, locales });
+const localizer = dateFnsLocalizer({
+  format,
+  parse,
+  startOfWeek: (date: Date) => tr.options && typeof tr.options.weekStartsOn === 'number' ? startOfWeek(date, { weekStartsOn: tr.options.weekStartsOn }) : startOfWeek(date, { weekStartsOn: 1 }),
+  getDay,
+  locales
+});
 
 // Sabit renk paleti (doktorlara deterministik renk ataması için)
 const palette = [
@@ -47,6 +55,7 @@ const DnDCalendar = withDragAndDrop(Calendar);
 type Role = 'doctor' | 'admin' | 'manager' | 'receptionist' | string;
 
 export default function FullAppointmentCalendar() {
+  const router = useRouter();
   // Hasta ekleme modalı için state
   const [showAddPatient, setShowAddPatient] = useState(false);
   // UI state
@@ -201,6 +210,7 @@ export default function FullAppointmentCalendar() {
       return { start: iso, end: iso };
     }
     if (viewMode === 'week') {
+      // Haftanın Pazartesi'den başlayıp Pazar'da bitmesi için weekStartsOn: 1 kullan
       const s = startOfWeek(viewDate, { weekStartsOn: 1 });
       const e = endOfWeek(viewDate, { weekStartsOn: 1 });
       return { start: format(s, 'yyyy-MM-dd'), end: format(e, 'yyyy-MM-dd') };
@@ -329,13 +339,18 @@ export default function FullAppointmentCalendar() {
     }
   };
 
-  const onEventDrop = async ({ event, start, end }: any) => {
+  const onEventDrop = async ({ event, start, end, resourceId }: any) => {
     try {
       const id = Number(event.id);
       const duration = Math.max(15, Math.round((new Date(end).getTime() - new Date(start).getTime()) / 60000));
       const alignedDuration = Math.ceil(duration / 15) * 15;
-      const body = { appointmentTime: new Date(start).toISOString(), duration: alignedDuration };
-  const res = await fetch(`https://dentalapi.karadenizdis.com/api/appointment/${id}/time-duration`, {
+      // Eğer resourceId (yeni doktor) değiştiyse, doktor_id de güncellensin
+      const newDoctorId = resourceId !== undefined ? resourceId : event.resourceId;
+      const body: any = { appointmentTime: new Date(start).toISOString(), duration: alignedDuration };
+      if (newDoctorId !== undefined && String(newDoctorId) !== String(event.resourceId)) {
+        body.doctorId = newDoctorId;
+      }
+      const res = await fetch(`https://dentalapi.karadenizdis.com/api/appointment/${id}/time-duration`, {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
       });
       const data = await res.json();
@@ -371,6 +386,7 @@ export default function FullAppointmentCalendar() {
       if (!createForm.when || !(role === 'doctor' ? user?.user_id : createForm.doctorId)) return;
       const doctorId = role === 'doctor' ? String(user.user_id) : createForm.doctorId;
       try {
+        const not = createForm.notes?.trim() ? `SAAT KAPATILDI - ${createForm.notes.trim()}` : 'SAAT KAPATILDI';
         const res = await fetch('https://dentalapi.karadenizdis.com/api/appointment', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -378,9 +394,9 @@ export default function FullAppointmentCalendar() {
             doctorId,
             appointmentTime: createForm.when.toISOString(),
             duration: createForm.duration,
-            notes: 'SAAT KAPATILDI',
+            notes: not,
             branchId,
-            status: 'missed',
+            status: 'saatkapatildi',
           })
         });
         const data = await res.json();
@@ -538,7 +554,7 @@ export default function FullAppointmentCalendar() {
   return (
   <div style={{ minHeight: '100vh', background: '#f5f7fb', overflowX: 'auto', maxWidth: '100vw', boxSizing: 'border-box', padding: 0 }}>
       {/* Top bar */}
-      <div style={{ position: 'sticky', top: 0, zIndex: 20, background: '#fff', borderBottom: '1px solid #e5e7eb', overflowX: 'auto', maxWidth: '100vw', boxSizing: 'border-box' }}>
+      <div style={{ position: 'sticky', top: 0, zIndex: 10, background: '#fff', borderBottom: '1px solid #e5e7eb', overflowX: 'auto', maxWidth: '100vw', boxSizing: 'border-box' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', flexWrap: 'wrap', minWidth: 260, maxWidth: '100vw', boxSizing: 'border-box' }}>
           
           <button aria-label="menu" onClick={() => setSidebarOpen(true)} style={{ width: 40, height: 40, borderRadius: 10, border: '2px solid #1f3755', background: '#1f3755', color: '#fff', cursor: 'pointer', fontWeight: 900 }}>
@@ -559,22 +575,27 @@ export default function FullAppointmentCalendar() {
               })()}
             </div>
           )}
-          <button
-            style={{ background: '#22c55e', color: '#fff', border: 0, borderRadius: 8, padding: '8px 18px', fontWeight: 700, fontSize: 16, cursor: 'pointer', marginRight: 12 }}
-            title="Hasta Ekle"
-            onClick={() => setShowAddPatient(true)}
-          >
-            + Hasta Ekle
-          </button>
+
+        
+
       {/* Hasta ekleme modalı */}
       {showAddPatient && (
         <AddPatientModal
           open={showAddPatient}
           onClose={() => setShowAddPatient(false)}
           doctors={doctors}
-          onSave={(data: any) => {
-            // Kaydet fonksiyonu şimdilik boş
+          onSave={(addedPatient: any) => {
+            // Hasta başarıyla eklendiğinde otomatik olarak createForm'da seçili hasta yap
             setShowAddPatient(false);
+            if (addedPatient && (addedPatient.patient_id || addedPatient.id)) {
+              setCreateForm(f => ({
+                ...f,
+                patientId: String(addedPatient.patient_id || addedPatient.id),
+                selectedPatient: addedPatient,
+                patientSearch: `${addedPatient.first_name || addedPatient.firstName || ''} ${addedPatient.last_name || addedPatient.lastName || ''} - ${addedPatient.phone || ''}`.trim(),
+                patientList: [],
+              }));
+            }
           }}
         />
       )}
@@ -625,6 +646,7 @@ export default function FullAppointmentCalendar() {
       <div style={{ maxWidth: 1800, margin: '16px auto', padding: '16px' }}>
         <DnDCalendar
           localizer={localizer}
+          culture="tr-TR"
           events={events}
           date={viewDate}
           view={viewMode as any}
@@ -665,12 +687,13 @@ export default function FullAppointmentCalendar() {
             eventTimeRangeEndFormat: eventTimeRangeEndFormat as any,
             agendaTimeRangeFormat: agendaTimeRangeFormat as any,
             weekdayFormat: (date: Date, localizer: any) => {
-              const gunler = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'];
-              return gunler[date.getDay()];
+              const gunler = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
+              // Pazartesi=1, Pazar=0 (getDay: 0=Pazar, 1=Pazartesi...)
+              return gunler[(date.getDay() + 6) % 7];
             },
             dayFormat: (date: Date, localizer: any) => {
-              const gunler = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'];
-              return gunler[date.getDay()];
+              const gunler = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
+              return gunler[(date.getDay() + 6) % 7];
             },
           }}
           messages={{ noEventsInRange: 'Randevu yok', today: 'Bugün', previous: 'Önceki', next: 'Sonraki' }}
@@ -695,8 +718,37 @@ export default function FullAppointmentCalendar() {
       </div>
 
       <style>{`
-        /* Resize handle'ların çerçevelerini kaldır */
-        .rbc-addons-dnd-resize-ns-anchor, .rbc-addons-dnd-resize-ew-anchor { border: none !important; background: transparent !important; }
+        /* Resize handle'ları belirgin ve büyük yap */
+        .rbc-addons-dnd-resize-ns-anchor, .rbc-addons-dnd-resize-ew-anchor {
+          border: 2px solid #2563eb !important;
+          background: #2563eb !important;
+          opacity: 0.85 !important;
+          width: 18px !important;
+          height: 18px !important;
+          border-radius: 50% !important;
+          position: absolute;
+          z-index: 10;
+          cursor: ns-resize !important;
+          transition: background 0.2s, border 0.2s;
+        }
+        .rbc-addons-dnd-resize-ns-anchor:hover, .rbc-addons-dnd-resize-ew-anchor:hover {
+          background: #1d4ed8 !important;
+          border-color: #1d4ed8 !important;
+        }
+        /* Handle'ı event'in tam kenarına yerleştir (üst/alt) */
+        .rbc-addons-dnd-resize-ns-anchor {
+          left: 50%;
+          transform: translateX(-50%);
+        }
+        .rbc-addons-dnd-resize-ns-anchor.rbc-addons-dnd-resize-n {
+          top: -9px;
+        }
+        .rbc-addons-dnd-resize-ns-anchor.rbc-addons-dnd-resize-s {
+          bottom: -9px;
+        }
+        /* Drag ile karışmaması için event'in ortasında pointer-events: auto, handle'da pointer-events: all */
+        .rbc-event-content { pointer-events: auto; }
+        .rbc-addons-dnd-resize-ns-anchor, .rbc-addons-dnd-resize-ew-anchor { pointer-events: all; }
         .rbc-time-slot, .rbc-timeslot-group { min-height: 18px; }
         /* Doktor kolon başlıkları ve header'ları koyulaştır */
         .rbc-time-header .rbc-header { color: #0f172a !important; font-weight: 800 !important; }
@@ -710,7 +762,7 @@ export default function FullAppointmentCalendar() {
 
       {/* Create Modal */}
       {showCreate && (
-        <div style={{ position: 'fixed', inset: 0 as any, zIndex: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.35)' }}>
+  <div style={{ position: 'fixed', inset: 0 as any, zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.35)' }}>
           <div style={{ background: '#fff', borderRadius: 12, padding: 20, width: '96%', maxWidth: 460, maxHeight: '90vh', overflowY: 'auto', boxSizing: 'border-box' }}>
             <div style={{ fontWeight: 900, fontSize: 20, marginBottom: 12, color: '#1f3755', letterSpacing: '0.5px' }}>Randevu Oluştur</div>
             {role !== 'doctor' && (
@@ -726,7 +778,14 @@ export default function FullAppointmentCalendar() {
             )}
             {!createForm.saatKapa && (
               <div style={{ marginBottom: 10 }}>
-                <div style={{ fontWeight: 900, marginBottom: 6, color: '#0f172a', letterSpacing: '0.5px' }}>Hasta</div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                  <span style={{ fontWeight: 900, color: '#0f172a', letterSpacing: '0.5px' }}>Hasta</span>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddPatient(true)}
+                    style={{ background: '#22c55e', color: '#fff', border: 0, borderRadius: 8, padding: '4px 12px', fontWeight: 700, fontSize: 14, cursor: 'pointer', marginLeft: 8 }}
+                  >+ Hasta Ekle</button>
+                </div>
                 {/* Şube seçici */}
                 <select
                   value={createForm.selectedBranchId}
@@ -750,7 +809,7 @@ export default function FullAppointmentCalendar() {
                 {createForm.patientList.length > 0 && (
                   <div style={{ maxHeight: 180, overflow: 'auto', border: '1px solid #e5e7eb', borderRadius: 8, marginTop: 6 }}>
                     {createForm.patientList.map((p: any) => (
-                      <div key={p.patient_id} onClick={() => setCreateForm(f => ({ ...f, patientId: String(p.patient_id), patientSearch: `${p.first_name} ${p.last_name} - ${p.phone}` , selectedPatient: p }))} style={{ padding: '8px 10px', cursor: 'pointer' }}>
+                      <div key={p.patient_id} onClick={() => setCreateForm(f => ({ ...f, patientId: String(p.patient_id), patientSearch: `${p.first_name} ${p.last_name} - ${p.phone}` , selectedPatient: p, patientList: [] }))} style={{ padding: '8px 10px', cursor: 'pointer' }}>
                         <div style={{ fontWeight: 800, color: '#0f172a' }}>{p.first_name} {p.last_name}</div>
                         <div style={{ fontSize: 12, color: '#0f172a' }}>{p.phone} {p.tc_number ? ` • ${p.tc_number}` : ''}</div>
                       </div>
@@ -897,9 +956,23 @@ export default function FullAppointmentCalendar() {
                       const t = createForm.when.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', hour12: false });
                       const bn = branchName || 'şube';
                       const message = `Sayın ${name}, Karadeniz Ağız ve Diş Sağlığı Poliklinikleri tarafından ${bn} şubesine ${d} ${t} saatinde randevunuz oluşturulmuştur.`;
-                      const res = await fetch('https://dentalapi.karadenizdis.com/api/sms/send-custom', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone, message }) });
-                      const data = await res.json();
-                      if (res.ok && data?.success) alert('SMS gönderildi'); else alert(data?.message || 'SMS gönderilemedi');
+                      // Quick SMS ile aynı endpoint ve payload yapısı
+                      const token = localStorage.getItem("token");
+                      const response = await fetch("/api/sms/send", {
+                        method: "POST",
+                        headers: {
+                          "Content-Type": "application/json",
+                          Authorization: `Bearer ${token}`
+                        },
+                        body: JSON.stringify({
+                          patientIds: [createForm.patientId],
+                          templateId: null, // manuel mesaj için null
+                          customMessage: message,
+                          phone: phone
+                        })
+                      });
+                      const data = await response.json();
+                      if (response.ok && data?.success) alert('SMS gönderildi'); else alert(data?.message || 'SMS gönderilemedi');
                     } catch (e) { alert('SMS gönderiminde hata'); }
                   }}
                   style={{ padding: '10px 16px', borderRadius: 8, border: '1px solid #16a34a', background: '#22c55e', color: '#fff', fontWeight: 700 }}
@@ -990,15 +1063,101 @@ export default function FullAppointmentCalendar() {
         <option value="scheduled">Planlandı</option>
         <option value="attended">Geldi</option>
         <option value="missed">Gelmedi</option>
+        <option value="ertelendi">Ertelendi</option>
       </select>
                 </div>
               </div>
             </div>
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'space-between', alignItems: 'center' }}>
-              <button onClick={deleteCurrentAppointment} disabled={updating} style={{ padding: '10px 16px', borderRadius: 8, border: '1px solid #dc2626', background: '#ef4444', color: '#fff', fontWeight: 700, opacity: updating ? 0.7 : 1 }}>Sil</button>
-              <div style={{ flex: 1 }} />
-              <button onClick={updateCurrentAppointment} disabled={updating} style={{ padding: '10px 16px', borderRadius: 8, border: '1px solid #3174ad', background: '#3174ad', color: '#fff', fontWeight: 700, opacity: updating ? 0.7 : 1 }}>Güncelle</button>
-              <button onClick={() => setShowSummary(false)} disabled={updating} style={{ padding: '10px 16px', borderRadius: 8, border: '2px solid #0f172a', background: '#0f172a', color: '#fff', fontWeight: 900, letterSpacing: '0.5px', opacity: updating ? 0.7 : 1, boxShadow: '0 2px 8px rgba(15,23,42,0.08)' }}>Kapat</button>
+            {/* SMS Önizleme kutusu ve butonlar modern hizalı */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 0, marginTop: 18 }}>
+              <div style={{ width: '100%', maxWidth: 480, alignSelf: 'flex-end', marginBottom: 10 }}>
+                <div style={{
+                  fontWeight: 900,
+                  fontSize: 15,
+                  marginBottom: 4,
+                  color: '#1976d2',
+                  letterSpacing: '0.2px',
+                  textAlign: 'left',
+                  paddingLeft: 2
+                }}>SMS Önizleme</div>
+                <div style={{
+                  border: '1.5px solid #1976d2',
+                  borderRadius: 10,
+                  padding: '14px 14px 12px 14px',
+                  background: 'linear-gradient(90deg, #f0f6ff 0%, #e3eaff 100%)',
+                  color: '#0f172a',
+                  fontSize: 15.5,
+                  fontWeight: 700,
+                  boxShadow: '0 2px 8px rgba(25,118,210,0.07)',
+                  lineHeight: 1.5,
+                  wordBreak: 'break-word',
+                  minHeight: 48
+                }}>
+                  {(() => {
+                    const patient = summaryData.patient;
+                    const event = summaryData.event;
+                    if (!patient) return '';
+                    const name = `${patient.first_name || ''} ${patient.last_name || ''}`.trim();
+                    const d = event?.appointment_time ? new Date(event.appointment_time).toLocaleDateString('tr-TR') : 'gün';
+                    const t = event?.appointment_time ? new Date(event.appointment_time).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', hour12: false }) : 'saat';
+                    const bn = event?.branch_name || branchName || 'şube';
+                    return `Sayın ${name}, Karadeniz Ağız ve Diş Sağlığı Poliklinikleri tarafından ${bn} şubesine ${d} ${t} saatinde randevunuz oluşturulmuştur.`;
+                  })()}
+                </div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'row', gap: 14, justifyContent: 'flex-end', width: '100%', maxWidth: 480, alignSelf: 'flex-end', marginTop: 2 }}>
+                <button onClick={deleteCurrentAppointment} disabled={updating} style={{ padding: '10px 18px', borderRadius: 8, border: '1.5px solid #dc2626', background: '#ef4444', color: '#fff', fontWeight: 800, fontSize: 15, opacity: updating ? 0.7 : 1 }}>Sil</button>
+                <button
+                  onClick={async () => {
+                    try {
+                      const patient = summaryData.patient;
+                      const event = summaryData.event;
+                      if (!patient?.phone) { alert('Hastanın telefon numarası bulunamadı'); return; }
+                      const name = `${patient.first_name || ''} ${patient.last_name || ''}`.trim();
+                      const d = new Date(event.appointment_time).toLocaleDateString('tr-TR');
+                      const t = new Date(event.appointment_time).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', hour12: false });
+                      const bn = event.branch_name || branchName || 'şube';
+                      const message = `Sayın ${name}, Karadeniz Ağız ve Diş Sağlığı Poliklinikleri tarafından ${bn} şubesine ${d} ${t} saatinde randevunuz oluşturulmuştur.`;
+                      const token = localStorage.getItem("token");
+                      const response = await fetch("/api/sms/send", {
+                        method: "POST",
+                        headers: {
+                          "Content-Type": "application/json",
+                          Authorization: `Bearer ${token}`
+                        },
+                        body: JSON.stringify({
+                          patientIds: [patient.patient_id],
+                          templateId: null,
+                          customMessage: message,
+                          phone: patient.phone
+                        })
+                      });
+                      const data = await response.json();
+                      if (response.ok && data?.success) alert('SMS gönderildi'); else alert(data?.message || 'SMS gönderilemedi');
+                    } catch (e) { alert('SMS gönderiminde hata'); }
+                  }}
+                  disabled={updating}
+                  style={{
+                    padding: '10px 22px',
+                    borderRadius: 8,
+                    border: '2px solid #16a34a',
+                    background: 'linear-gradient(90deg, #22c55e 0%, #16a34a 100%)',
+                    color: '#fff',
+                    fontWeight: 900,
+                    fontSize: 15.5,
+                    letterSpacing: '0.2px',
+                    boxShadow: '0 2px 8px rgba(34,197,94,0.09)',
+                    opacity: updating ? 0.7 : 1,
+                    marginTop: 0,
+                    marginBottom: 0,
+                    transition: 'background 0.2s, box-shadow 0.2s'
+                  }}
+                >
+                  SMS Gönder
+                </button>
+                <button onClick={updateCurrentAppointment} disabled={updating} style={{ padding: '10px 18px', borderRadius: 8, border: '1.5px solid #3174ad', background: '#3174ad', color: '#fff', fontWeight: 800, fontSize: 15, opacity: updating ? 0.7 : 1 }}>Güncelle</button>
+                <button onClick={() => setShowSummary(false)} disabled={updating} style={{ padding: '10px 18px', borderRadius: 8, border: '2px solid #0f172a', background: '#0f172a', color: '#fff', fontWeight: 900, fontSize: 15, letterSpacing: '0.5px', opacity: updating ? 0.7 : 1, boxShadow: '0 2px 8px rgba(15,23,42,0.08)' }}>Kapat</button>
+              </div>
             </div>
           </div>
         </div>
@@ -1016,9 +1175,8 @@ export default function FullAppointmentCalendar() {
           open={showPatientSelect}
           onClose={() => setShowPatientSelect(false)}
           onSelect={(id: any) => {
-            // Hasta seçildiğinde yapılacak işlemler
             setShowPatientSelect(false);
-            // ...buraya hasta seçimi sonrası ek işlemler eklenebilir...
+            router.push(`/patients/card?id=${id}`);
           }}
         />
       )}

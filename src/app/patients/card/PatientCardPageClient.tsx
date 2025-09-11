@@ -471,24 +471,6 @@ export default function PatientCardPageClient() {
               >
                 Yeni Randevu
               </button>
-              <button
-                style={{
-                  background: "#f5f6fa",
-                  color: "#7c6f00",
-                  border: "1.5px solid #e6e6b6",
-                  borderRadius: 18,
-                  padding: "8px 24px",
-                  fontWeight: 600,
-                  fontSize: 15,
-                  boxShadow: "0 1px 4px #e3eaff33",
-                  cursor: "pointer",
-                  transition: "background 0.2s"
-                }}
-                className="pc-btn"
-                type="button"
-              >
-                Onam Formu Oluştur
-              </button>
                 <button
                   style={{
                     background: "#eaf1fb",
@@ -549,14 +531,16 @@ export default function PatientCardPageClient() {
                   y -= 24;
                   // Kolon başlıkları (gri arka plan, koyu yazı)
                   page.drawRectangle({ x: 50, y: y-2, width: 490, height: 18, color: rgb(0.93,0.96,0.99), borderColor: rgb(0.8,0.85,0.95), borderWidth: 1 });
-                  // Kolon dikey çizgileri
-                  page.drawLine({ start: { x: 170, y: y-2 }, end: { x: 170, y: y+16 }, color: rgb(0.7,0.8,0.9), thickness: 1 });
+                  // Kolon dikey çizgileri (5 kolon: 170, 300, 400, 470)
+                  page.drawLine({ start: { x: 130, y: y-2 }, end: { x: 130, y: y+16 }, color: rgb(0.7,0.8,0.9), thickness: 1 });
+                  page.drawLine({ start: { x: 210, y: y-2 }, end: { x: 210, y: y+16 }, color: rgb(0.7,0.8,0.9), thickness: 1 });
                   page.drawLine({ start: { x: 300, y: y-2 }, end: { x: 300, y: y+16 }, color: rgb(0.7,0.8,0.9), thickness: 1 });
                   page.drawLine({ start: { x: 400, y: y-2 }, end: { x: 400, y: y+16 }, color: rgb(0.7,0.8,0.9), thickness: 1 });
                   page.drawText(sanitizeText("Tedavi Adı"), { x: 60, y: y+2, size: 12, font, color: rgb(0.1,0.3,0.6) });
-                  page.drawText(sanitizeText("Diş No"), { x: 220, y: y+2, size: 12, font, color: rgb(0.1,0.3,0.6) });
-                  page.drawText(sanitizeText("Doktor"), { x: 320, y: y+2, size: 12, font, color: rgb(0.1,0.3,0.6) });
-                  page.drawText(sanitizeText("Durum"), { x: 420, y: y+2, size: 12, font, color: rgb(0.1,0.3,0.6) });
+                  page.drawText(sanitizeText("Diş No"), { x: 140, y: y+2, size: 12, font, color: rgb(0.1,0.3,0.6) });
+                  page.drawText(sanitizeText("Doktor"), { x: 220, y: y+2, size: 12, font, color: rgb(0.1,0.3,0.6) });
+                  page.drawText(sanitizeText("Durum"), { x: 310, y: y+2, size: 12, font, color: rgb(0.1,0.3,0.6) });
+                  page.drawText(sanitizeText("Tedavi Notu"), { x: 410, y: y+2, size: 12, font, color: rgb(0.1,0.3,0.6) });
                   y -= 18;
                   // Satırlar
                   items.forEach((tr: any, idx: number) => {
@@ -569,14 +553,16 @@ export default function PatientCardPageClient() {
                     }
                     // Alternatif arka plan ve kenarlık
                     page.drawRectangle({ x: 50, y: y-2, width: 490, height: 16, color: idx%2===0 ? rgb(0.98,0.98,1) : rgb(0.93,0.96,0.99), borderColor: rgb(0.8,0.85,0.95), borderWidth: 1 });
-                    // Satır dikey çizgileri
-                    page.drawLine({ start: { x: 170, y: y-2 }, end: { x: 170, y: y+14 }, color: rgb(0.7,0.8,0.9), thickness: 1 });
+                    // Satır dikey çizgileri (5 kolon: 130, 210, 300, 400)
+                    page.drawLine({ start: { x: 130, y: y-2 }, end: { x: 130, y: y+14 }, color: rgb(0.7,0.8,0.9), thickness: 1 });
+                    page.drawLine({ start: { x: 210, y: y-2 }, end: { x: 210, y: y+14 }, color: rgb(0.7,0.8,0.9), thickness: 1 });
                     page.drawLine({ start: { x: 300, y: y-2 }, end: { x: 300, y: y+14 }, color: rgb(0.7,0.8,0.9), thickness: 1 });
                     page.drawLine({ start: { x: 400, y: y-2 }, end: { x: 400, y: y+14 }, color: rgb(0.7,0.8,0.9), thickness: 1 });
                     page.drawText(sanitizeText(tr.treatment_type_name || tr.name || "Tedavi"), { x: 60, y: y+2, size: 9, font, color: rgb(0,0,0) });
-                    page.drawText(sanitizeText(Array.isArray(teeth) && teeth.length > 0 ? teeth.join(", ") : "-"), { x: 220, y: y+2, size: 9, font, color: rgb(0,0,0) });
-                    page.drawText(sanitizeText(doctorName), { x: 320, y: y+2, size: 9, font, color: rgb(0,0,0) });
-                    page.drawText(sanitizeText(tr.status), { x: 420, y: y+2, size: 9, font, color: rgb(0,0,0) });
+                    page.drawText(sanitizeText(Array.isArray(teeth) && teeth.length > 0 ? teeth.join(", ") : "-"), { x: 140, y: y+2, size: 9, font, color: rgb(0,0,0) });
+                    page.drawText(sanitizeText(doctorName), { x: 220, y: y+2, size: 9, font, color: rgb(0,0,0) });
+                    page.drawText(sanitizeText(tr.status), { x: 310, y: y+2, size: 9, font, color: rgb(0,0,0) });
+                    page.drawText(sanitizeText(tr.note || "-"), { x: 410, y: y+2, size: 9, font, color: rgb(0,0,0) });
                     y -= 16;
                   });
                   y -= 10;

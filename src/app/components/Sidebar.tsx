@@ -19,7 +19,7 @@ const menu = [
       { label: "Yeni Hasta Ekle", path: "/patients/new" },
       { label: "Hasta Listesi", path: "/patients" },
       { label: "Toplu Hasta Ekleme", path: "/patients/bulk" },
-      { label: "Onam Formları", path: "/consent-forms" },
+  { label: "Onam Formları", path: "/patients/consent" },
     ],
   },
   {

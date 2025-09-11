@@ -18,7 +18,7 @@ export default function AddPatientModal({ open, onClose, doctors, onSave }: { op
   if (!open && !addedPatient) return null;
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+  <div style={{ position: 'fixed', inset: 0, zIndex: 999999, background: 'rgba(0,0,0,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ background: '#fff', borderRadius: 12, padding: 28, minWidth: 340, maxWidth: 400, width: '100%', boxShadow: '0 2px 16px #0003' }}>
         <h3 style={{ marginBottom: 16, color: '#0a2972', fontWeight: 900, fontSize: 22, letterSpacing: '0.5px' }}>Hasta Ekle</h3>
         <div style={{ display: 'grid', gap: 14 }}>
@@ -150,7 +150,7 @@ export default function AddPatientModal({ open, onClose, doctors, onSave }: { op
           <div style={{
             position: 'fixed',
             inset: 0,
-            zIndex: 10000,
+            zIndex: 999999,
             background: 'rgba(0,0,0,0.45)',
             display: 'flex',
             alignItems: 'center',
@@ -167,7 +167,7 @@ export default function AddPatientModal({ open, onClose, doctors, onSave }: { op
                 <div style={{ fontWeight: 900, color: '#1e293b' }}><span style={{ fontWeight: 900 }}>Doğum Tarihi:</span> {(addedPatient.birth_date || addedPatient.birthDate || '').toString().substring(0,10)}</div>
               </div>
               <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
-                <button onClick={() => { setAddedPatient(null); onClose(); }} style={{ flex: 1, padding: '10px 16px', borderRadius: 8, border: '2px solid #3174ad', background: '#3174ad', color: '#fff', fontWeight: 900 }}>Kapat</button>
+                <button onClick={() => { if (onSave) onSave(addedPatient); setAddedPatient(null); onClose(); }} style={{ flex: 1, padding: '10px 16px', borderRadius: 8, border: '2px solid #3174ad', background: '#3174ad', color: '#fff', fontWeight: 900 }}>Kapat</button>
                 <button
                   onClick={() => {
                     window.location.href = `/patients/new?id=${addedPatient.patient_id || addedPatient.id || ''}`;

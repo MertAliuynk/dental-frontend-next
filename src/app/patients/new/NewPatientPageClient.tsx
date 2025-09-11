@@ -1,10 +1,33 @@
 "use client";
 // import Topbar from "../../components/Topbar";
-import { useState, useEffect } from "react";
+import { useState, useEffect,useRef } from "react";
+import { CSSTransition } from "react-transition-group";
 import { jwtDecode } from "jwt-decode";
 import { useSearchParams, useRouter } from "next/navigation";
 
+
+const diseaseList: string[] = [
+  "Kalp hastalıkları",
+  "Şeker hastalığı",
+  "Tansiyon sorunu",
+  "Epilepsi (sara)",
+  "Guatr (Trold tabletleri)",
+  "Kan hastalıkları",
+  "İlaç alerjisi",
+  "Akciğer hastalıkları",
+  "Sinüzit",
+  "AIDS",
+  "Ateşli romatizma",
+  "Hepatit",
+  "Eklem romatizması",
+  "Astım, saman nezlesi",
+  "Böbrek karaciğer",
+  "Zührevi hastalık bozuklukları"
+];
+
 export default function NewPatientPageClient() {
+  // Ref for CSSTransition node
+  const diseaseListRef = useRef<HTMLDivElement>(null);
   // Validasyon state'leri (hook'lar component fonksiyonunun içinde olmalı)
   const [tcError, setTcError] = useState("");
   const [phoneError, setPhoneError] = useState("");
@@ -23,6 +46,7 @@ export default function NewPatientPageClient() {
       tedavi: string;
       hastalik: string;
       hastalikList: boolean;
+      hastaliklar: string[];
       radyoterapi: string;
       kanama: string;
       ilacAlerji: string;
@@ -42,6 +66,7 @@ export default function NewPatientPageClient() {
       tedavi: "",
       hastalik: "",
       hastalikList: false,
+      hastaliklar: [],
       radyoterapi: "",
       kanama: "",
       ilacAlerji: "",
@@ -157,7 +182,13 @@ export default function NewPatientPageClient() {
     }
     if (name.startsWith("anamnez.")) {
       const key = name.replace("anamnez.", "");
-      setForm(f => ({ ...f, anamnez: { ...f.anamnez, [key]: type === "checkbox" ? checked : value } }));
+      if (key === "hastaliklar") {
+        // Çoklu checkbox için
+        const val = value;
+        setForm(f => ({ ...f, anamnez: { ...f.anamnez, hastaliklar: val } }));
+      } else {
+        setForm(f => ({ ...f, anamnez: { ...f.anamnez, [key]: type === "checkbox" ? checked : value } }));
+      }
     } else {
       setForm(f => ({ ...f, [name]: value }));
     }
@@ -261,6 +292,7 @@ export default function NewPatientPageClient() {
                   tedavi: "",
                   hastalik: "",
                   hastalikList: false,
+                  hastaliklar: [],
                   radyoterapi: "",
                   kanama: "",
                   ilacAlerji: "",
@@ -369,6 +401,56 @@ export default function NewPatientPageClient() {
                 <input type="checkbox" name="anamnez.hastalikList" checked={form.anamnez.hastalikList} onChange={handleChange} />
                 Hastalık Listesini Göster
               </label>
+              <CSSTransition
+                in={form.anamnez.hastalikList}
+                timeout={200}
+                classNames="disease-list"
+                unmountOnExit
+                nodeRef={diseaseListRef}
+              >
+                <div ref={diseaseListRef} className="disease-list-box" style={{ marginTop: 8, border: '1px solid #e5e7eb', borderRadius: 8, padding: 12, background: '#f9fafb', boxShadow: '0 2px 8px #0001', maxWidth: 340 }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24 }}>
+                    <div style={{ minWidth: 150 }}>
+                      {diseaseList.slice(0, Math.ceil(diseaseList.length/2)).map((disease: string, idx: number) => (
+                        <label key={disease} style={{ display: 'flex', alignItems: 'center', marginBottom: 6, fontSize: 16, cursor: 'pointer', color: '#1e293b', fontWeight: 700 }}>
+                          <input
+                            type="checkbox"
+                            name="anamnez.hastaliklar"
+                            checked={form.anamnez.hastaliklar?.includes(disease)}
+                            onChange={e => {
+                              const newList = e.target.checked
+                                ? [...(form.anamnez.hastaliklar || []), disease]
+                                : (form.anamnez.hastaliklar || []).filter((d: string) => d !== disease);
+                              handleChange({ target: { name: "anamnez.hastaliklar", value: newList } });
+                            }}
+                            style={{ marginRight: 8 }}
+                          />
+                          {disease}
+                        </label>
+                      ))}
+                    </div>
+                    <div style={{ minWidth: 150 }}>
+                      {diseaseList.slice(Math.ceil(diseaseList.length/2)).map((disease: string, idx: number) => (
+                        <label key={disease} style={{ display: 'flex', alignItems: 'center', marginBottom: 6, fontSize: 16, cursor: 'pointer', color: '#1e293b', fontWeight: 700 }}>
+                          <input
+                            type="checkbox"
+                            name="anamnez.hastaliklar"
+                            checked={form.anamnez.hastaliklar?.includes(disease)}
+                            onChange={e => {
+                              const newList = e.target.checked
+                                ? [...(form.anamnez.hastaliklar || []), disease]
+                                : (form.anamnez.hastaliklar || []).filter((d: string) => d !== disease);
+                              handleChange({ target: { name: "anamnez.hastaliklar", value: newList } });
+                            }}
+                            style={{ marginRight: 8 }}
+                          />
+                          {disease}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </CSSTransition>
               <label className="np-label">Baş ve boyun bölgesinde radyoterapi gördünüz mü?
                 <div className="np-toggle-row">
                   <button

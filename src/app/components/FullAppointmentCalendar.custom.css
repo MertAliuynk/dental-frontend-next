@@ -1,0 +1,25 @@
+/* Takvimde kolonlar arası çizgileri daha koyu yapar */
+/* Sadece doktorları ayıran kolonlar kalın, günler arası çizgiler soft */
+
+/* Günler arası çizgiler soft, sadece doktor kolonları kalın ve mavi-gri */
+.rbc-time-header-content {
+  border-right: none !important;
+}
+.rbc-time-header-cell + .rbc-time-header-cell {
+  border-left: 2.5px solid #b6c6e3 !important; /* Doktor kolonları */
+}
+.rbc-time-content > .rbc-day-slot + .rbc-day-slot {
+  border-left: 2.5px solid #b6c6e3 !important; /* Doktor kolonları */
+}
+.rbc-day-bg {
+  border-left: 1px solid #e5e7eb !important; /* Günler arası çizgi soft */
+}
+.rbc-day-bg:first-child {
+  border-left: none !important;
+}
+.rbc-time-header, .rbc-header, .rbc-timeslot-group {
+  border-bottom: 1.5px solid #e5e7eb !important; /* Alt çizgiler soft */
+}
+.rbc-time-content > * {
+  border-right: none !important;
+}

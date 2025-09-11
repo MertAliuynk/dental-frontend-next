@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 
-export default function PatientSelectModal({ open, onClose, onSelect }: { open: boolean, onClose: () => void, onSelect: (id: number) => void }) {
+export default function PatientSelectModal({ open, onClose, onSelect }: { open: boolean, onClose: () => void, onSelect: (patient: any) => void }) {
   const [patients, setPatients] = useState<any[]>([]);
   const [branches, setBranches] = useState<any[]>([]);
   const [selectedBranch, setSelectedBranch] = useState<string>("all");

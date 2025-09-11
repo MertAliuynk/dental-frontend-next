@@ -21,6 +21,7 @@
     "react-dnd-touch-backend": "^16.0.1",
     "react-dom": "19.1.0",
     "react-error-boundary": "^6.0.0",
+    "react-select": "^5.10.2",
     "react-virtualized-auto-sizer": "^1.0.26",
     "react-window": "^1.8.11"
   },
