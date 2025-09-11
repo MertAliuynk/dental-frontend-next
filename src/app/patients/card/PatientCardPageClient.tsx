@@ -615,6 +615,30 @@ export default function PatientCardPageClient() {
               >
                 Not Ekle
               </button>
+              <button
+                style={{
+                  background: "#e3eafc",
+                  color: "#1976d2",
+                  border: "1.5px solid #b6c6e6",
+                  borderRadius: 18,
+                  padding: "8px 24px",
+                  fontWeight: 600,
+                  fontSize: 15,
+                  boxShadow: "0 1px 4px #e3eaff33",
+                  cursor: "pointer",
+                  transition: "background 0.2s",
+                  marginLeft: 8
+                }}
+                className="pc-btn"
+                type="button"
+                onClick={() => {
+                  if (patient && patient.patient_id) {
+                    router.push(`/patients/new?id=${patient.patient_id}`);
+                  }
+                }}
+              >
+                Düzenle
+              </button>
       {/* Not Ekleme Modalı */}
       {addNoteModal && (
         <div style={{

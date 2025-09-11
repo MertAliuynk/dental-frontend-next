@@ -97,16 +97,20 @@ const MiniAppointmentCalendar: React.FC = () => {
           .then(res => res.json())
           .then(data => {
             if (data.success && Array.isArray(data.data)) {
-              return data.data.map((item: any) => ({
-                id: item.appointment_id,
-                title: `${item.patient_name || item.patient_first_name + ' ' + item.patient_last_name} - ${item.notes || ''}`,
-                start: new Date(item.appointment_time),
-                end: new Date(new Date(item.appointment_time).getTime() + (item.duration_minutes || 30) * 60000),
-                doctorId: doc.id,
-                patient: item.patient_name || item.patient_first_name + ' ' + item.patient_last_name,
-                note: item.notes || "",
-                patientId: item.patient_id || item.patientId
-              }));
+              return data.data.map((item: any) => {
+                const isSaatKapatildi = (item.status === 'saatkapatildi');
+                const patientName = isSaatKapatildi ? '' : (item.patient_name || item.patient_first_name + ' ' + item.patient_last_name);
+                return {
+                  id: item.appointment_id,
+                  title: `${patientName}${patientName && item.notes ? ' - ' : ''}${item.notes || ''}`,
+                  start: new Date(item.appointment_time),
+                  end: new Date(new Date(item.appointment_time).getTime() + (item.duration_minutes || 30) * 60000),
+                  doctorId: doc.id,
+                  patient: patientName,
+                  note: item.notes || "",
+                  patientId: isSaatKapatildi ? undefined : (item.patient_id || item.patientId)
+                };
+              });
             }
             return [];
           })
@@ -135,6 +139,7 @@ const MiniAppointmentCalendar: React.FC = () => {
           timeslots={1}
           min={new Date(today.getFullYear(), today.getMonth(), today.getDate(), 9, 0)}
           max={new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 0)}
+          scrollToTime={new Date(today.getFullYear(), today.getMonth(), today.getDate(), 9, 0)}
           resources={resources}
           resourceIdAccessor="resourceId"
           resourceTitleAccessor="resourceTitle"
@@ -192,19 +197,23 @@ const MiniAppointmentCalendar: React.FC = () => {
               Randevu Özeti
             </div>
             <div className="modern-modal-patient">
-              <a
-                href={selectedEvent.patientId ? `/patients/card?id=${selectedEvent.patientId}` : undefined}
-                onClick={e => {
-                  e.stopPropagation();
-                  if (selectedEvent.patientId) {
-                    window.location.href = `/patients/card?id=${selectedEvent.patientId}`;
-                  }
-                }}
-                className="modern-modal-patient-link"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{marginRight:5,verticalAlign:'middle'}}><circle cx="12" cy="12" r="12" fill="#1976d2" opacity="0.18"/><path d="M12 12c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V20h14v-2.5c0-2.33-4.67-3.5-7-3.5z" fill="#1976d2"/></svg>
-                {selectedEvent.patient}
-              </a>
+              {selectedEvent.patient ? (
+                <a
+                  href={selectedEvent.patientId ? `/patients/card?id=${selectedEvent.patientId}` : undefined}
+                  onClick={e => {
+                    e.stopPropagation();
+                    if (selectedEvent.patientId) {
+                      window.location.href = `/patients/card?id=${selectedEvent.patientId}`;
+                    }
+                  }}
+                  className="modern-modal-patient-link"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{marginRight:5,verticalAlign:'middle'}}><circle cx="12" cy="12" r="12" fill="#1976d2" opacity="0.18"/><path d="M12 12c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V20h14v-2.5c0-2.33-4.67-3.5-7-3.5z" fill="#1976d2"/></svg>
+                  {selectedEvent.patient}
+                </a>
+              ) : (
+                <span style={{ fontWeight: 900, color: '#6073a6', fontSize: 18 }}>—</span>
+              )}
             </div>
             <div className="modern-modal-note">{selectedEvent.note}</div>
             <div className="modern-modal-time">

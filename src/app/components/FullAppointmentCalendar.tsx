@@ -1,3 +1,9 @@
+// Custom event renderer: Saat ve başlık tek satırda
+const CustomEvent = ({ event }: { event: any }) => {
+  return (
+    <span>{event.title}</span>
+  );
+};
 // Diş Kliniği Randevu Takvimi - Sıfırdan modern ve bol yorumlu
 // Gereksinimler: rol tabanlı görünüm, canlı veri, doktor renkleri, responsive tasarım
 
@@ -507,7 +513,7 @@ export default function FullAppointmentCalendar() {
         const res3 = await fetch(`https://dentalapi.karadenizdis.com/api/appointment/${a.appointment_id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: editFields.status })
+          body: JSON.stringify({ status: editFields.status, notes: (editFields.notes ?? a.notes ?? '') })
         });
         const data3 = await res3.json();
         if (!(res3.ok && data3?.success)) {
@@ -689,25 +695,33 @@ export default function FullAppointmentCalendar() {
             weekdayFormat: (date: Date, localizer: any) => {
               const gunler = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
               // Pazartesi=1, Pazar=0 (getDay: 0=Pazar, 1=Pazartesi...)
-              return gunler[(date.getDay() + 6) % 7];
+              const gun = gunler[(date.getDay() + 6) % 7];
+              const gunNum = date.getDate();
+              const ay = date.getMonth() + 1;
+              return `${gun} ${gunNum < 10 ? '0' + gunNum : gunNum}.${ay < 10 ? '0' + ay : ay}`;
             },
             dayFormat: (date: Date, localizer: any) => {
               const gunler = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
-              return gunler[(date.getDay() + 6) % 7];
+              const gun = gunler[(date.getDay() + 6) % 7];
+              const gunNum = date.getDate();
+              const ay = date.getMonth() + 1;
+              return `${gun} ${gunNum < 10 ? '0' + gunNum : gunNum}.${ay < 10 ? '0' + ay : ay}`;
             },
           }}
           messages={{ noEventsInRange: 'Randevu yok', today: 'Bugün', previous: 'Önceki', next: 'Sonraki' }}
           min={new Date(viewDate.getFullYear(), viewDate.getMonth(), viewDate.getDate(), 9, 0)}
           max={new Date(viewDate.getFullYear(), viewDate.getMonth(), viewDate.getDate(), 23, 59, 59)}
+          scrollToTime={new Date(viewDate.getFullYear(), viewDate.getMonth(), viewDate.getDate(), 9, 0)}
           style={{ height: 820, background: '#fff', borderRadius: 12, boxShadow: '0 2px 12px rgba(0,0,0,0.05)', padding: 12 }}
           components={{
             toolbar: () => <></>,
-      resourceHeader: ({ resource }: any) => {
+            event: CustomEvent,
+            resourceHeader: ({ resource }: any) => {
               const id = resource?.resourceId ?? resource?.id ?? 0;
               const title = resource?.resourceTitle ?? resource?.title ?? '';
               const color = colorForDoctor(id);
               return (
-        <div style={{ fontWeight: 900, color, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, width: '100%', textAlign: 'center' }}>
+                <div style={{ fontWeight: 900, color, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, width: '100%', textAlign: 'center' }}>
                   <span style={{ color, fontWeight: 900 }}>dt.</span>
                   <span style={{ color, fontWeight: 900 }}>{title}</span>
                 </div>
@@ -718,6 +732,10 @@ export default function FullAppointmentCalendar() {
       </div>
 
       <style>{`
+        /* Event kutularında yazı boyutunu küçült */
+        .rbc-event, .modern-event {
+          font-size: 12px !important;
+        }
         /* Resize handle'ları belirgin ve büyük yap */
         .rbc-addons-dnd-resize-ns-anchor, .rbc-addons-dnd-resize-ew-anchor {
           border: 2px solid #2563eb !important;
@@ -787,19 +805,7 @@ export default function FullAppointmentCalendar() {
                   >+ Hasta Ekle</button>
                 </div>
                 {/* Şube seçici */}
-                <select
-                  value={createForm.selectedBranchId}
-                  onChange={e => {
-                    setCreateForm(f => ({ ...f, selectedBranchId: e.target.value }));
-                    searchPatients(createForm.patientSearch, 0);
-                  }}
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #d1d5db', color: '#0f172a', fontWeight: 700, marginBottom: 8 }}
-                >
-                  <option value=''>Tüm Şubeler</option>
-                  {branches.map((branch: any) => (
-                    <option key={branch.branch_id} value={branch.branch_id}>{branch.name}</option>
-                  ))}
-                </select>
+
                 <input
                   value={createForm.patientSearch}
                   onChange={(e) => { const q = e.target.value; setCreateForm(f => ({ ...f, patientSearch: q })); searchPatients(q, 0); }}
@@ -810,7 +816,7 @@ export default function FullAppointmentCalendar() {
                   <div style={{ maxHeight: 180, overflow: 'auto', border: '1px solid #e5e7eb', borderRadius: 8, marginTop: 6 }}>
                     {createForm.patientList.map((p: any) => (
                       <div key={p.patient_id} onClick={() => setCreateForm(f => ({ ...f, patientId: String(p.patient_id), patientSearch: `${p.first_name} ${p.last_name} - ${p.phone}` , selectedPatient: p, patientList: [] }))} style={{ padding: '8px 10px', cursor: 'pointer' }}>
-                        <div style={{ fontWeight: 800, color: '#0f172a' }}>{p.first_name} {p.last_name}</div>
+                        <div style={{ fontWeight: 800, color: '#0f172a' }}>{p.first_name} {p.last_name} <span style={{ fontWeight: 600, color: '#1976d2', fontSize: 12, marginLeft: 6 }}>{p.branch_name ? `(${p.branch_name})` : ''}</span></div>
                         <div style={{ fontSize: 12, color: '#0f172a' }}>{p.phone} {p.tc_number ? ` • ${p.tc_number}` : ''}</div>
                       </div>
                     ))}
@@ -1054,13 +1060,25 @@ export default function FullAppointmentCalendar() {
                   </select>
                 </div>
                 <div style={{ gridColumn: '1 / -1' }}>
-      <div style={{ fontWeight: 800, marginBottom: 6, color: '#0f172a' }}>Not</div>
+      <div
+        style={{
+          fontWeight: 400,
+          fontSize: '13px',
+          marginBottom: 4,
+          color: '#1976d2',
+          letterSpacing: '0.1px',
+          display: 'inline-block'
+        }}
+      >
+        <span style={{ fontWeight: 800, color: '#0f172a', fontSize: '15px', marginRight: 4 }}>Not:</span>
+        Durum değiştirirken lütfen açıklama ekleyin.
+      </div>
       <textarea rows={3} value={editFields.notes} onChange={(e) => setEditFields(f => ({ ...f, notes: e.target.value }))} style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid #d1d5db', resize: 'vertical', color: '#0f172a', fontWeight: 800 }} />
                 </div>
                 <div style={{ gridColumn: '1 / -1' }}>
       <div style={{ fontWeight: 800, marginBottom: 6, color: '#0f172a' }}>Durum</div>
       <select value={editFields.status} onChange={e => setEditFields(f => ({ ...f, status: e.target.value }))} style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid #d1d5db', color: '#0f172a', fontWeight: 800 }}>
-        <option value="scheduled">Planlandı</option>
+        <option value="scheduled">Bekleniyor</option>
         <option value="attended">Geldi</option>
         <option value="missed">Gelmedi</option>
         <option value="ertelendi">Ertelendi</option>

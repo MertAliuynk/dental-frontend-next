@@ -303,7 +303,18 @@ export default function NewPatientPageClient() {
                 }
               });
             } else {
-              setMessage(data.message || "Kayıt sırasında hata oluştu.");
+              // Sadece Türkçe hata mesajı göster
+              const msg = data.message?.toLowerCase() || "";
+              if (
+                msg.includes("duplicate") ||
+                msg.includes("tc")||
+                msg.includes("kimlik") && msg.includes("var") ||
+                msg.includes("zaten") && (msg.includes("tc") || msg.includes("kimlik"))
+              ) {
+                setMessage("Aynı TC ile eklenmiş hasta vardır.");
+              } else {
+                setMessage("Tc kimlik hatası aynı tc ye sahip hasta vardır.");
+              }
             }
           }
         } catch (err) {
