@@ -738,8 +738,8 @@ export default function FullAppointmentCalendar() {
         }
         /* Resize handle'ları belirgin ve büyük yap */
         .rbc-addons-dnd-resize-ns-anchor, .rbc-addons-dnd-resize-ew-anchor {
-          border: 2px solid #2563eb !important;
-          background: #2563eb !important;
+          border: none !important;
+          background: transparent !important;
           opacity: 0.85 !important;
           width: 18px !important;
           height: 18px !important;

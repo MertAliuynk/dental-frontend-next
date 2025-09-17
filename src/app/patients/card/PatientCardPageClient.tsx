@@ -542,6 +542,23 @@ export default function PatientCardPageClient() {
                   page.drawText(sanitizeText("Tedavi Notu"), { x: 410, y: y+2, size: 12, font, color: rgb(0.1,0.3,0.6) });
                   y -= 18;
                   // Satırlar
+                  // Yardımcı: metni sütun genişliğine göre satırlara böl
+                  function splitText(text: string, maxLen: number) {
+                    if (!text) return ["-"];
+                    text = sanitizeText(text);
+                    const lines = [];
+                    let current = "";
+                    for (const word of text.split(" ")) {
+                      if ((current + word).length > maxLen) {
+                        if (current) lines.push(current.trim());
+                        current = word + " ";
+                      } else {
+                        current += word + " ";
+                      }
+                    }
+                    if (current.trim().length > 0) lines.push(current.trim());
+                    return lines;
+                  }
                   items.forEach((tr: any, idx: number) => {
                     const teeth = tr.tooth_numbers || tr.toothNumbers || [];
                     let doctorName = "-";
@@ -550,19 +567,35 @@ export default function PatientCardPageClient() {
                     } else if (tr.doctor_name) {
                       doctorName = tr.doctor_name;
                     }
-                    // Alternatif arka plan ve kenarlık
-                    page.drawRectangle({ x: 50, y: y-2, width: 490, height: 16, color: idx%2===0 ? rgb(0.98,0.98,1) : rgb(0.93,0.96,0.99), borderColor: rgb(0.8,0.85,0.95), borderWidth: 1 });
-                    // Satır dikey çizgileri (5 kolon: 130, 210, 300, 400)
-                    page.drawLine({ start: { x: 130, y: y-2 }, end: { x: 130, y: y+14 }, color: rgb(0.7,0.8,0.9), thickness: 1 });
-                    page.drawLine({ start: { x: 210, y: y-2 }, end: { x: 210, y: y+14 }, color: rgb(0.7,0.8,0.9), thickness: 1 });
-                    page.drawLine({ start: { x: 300, y: y-2 }, end: { x: 300, y: y+14 }, color: rgb(0.7,0.8,0.9), thickness: 1 });
-                    page.drawLine({ start: { x: 400, y: y-2 }, end: { x: 400, y: y+14 }, color: rgb(0.7,0.8,0.9), thickness: 1 });
-                    page.drawText(sanitizeText(tr.treatment_type_name || tr.name || "Tedavi"), { x: 60, y: y+2, size: 9, font, color: rgb(0,0,0) });
-                    page.drawText(sanitizeText(Array.isArray(teeth) && teeth.length > 0 ? teeth.join(", ") : "-"), { x: 140, y: y+2, size: 9, font, color: rgb(0,0,0) });
-                    page.drawText(sanitizeText(doctorName), { x: 220, y: y+2, size: 9, font, color: rgb(0,0,0) });
-                    page.drawText(sanitizeText(tr.status), { x: 310, y: y+2, size: 9, font, color: rgb(0,0,0) });
-                    page.drawText(sanitizeText(tr.note || "-"), { x: 410, y: y+2, size: 9, font, color: rgb(0,0,0) });
-                    y -= 16;
+                    // Sütunlara göre karakter sınırı: Tedavi Adı(22), Diş No(18), Doktor(18), Durum(12), Not(30)
+                    const columns = [
+                      splitText(tr.treatment_type_name || tr.name || "Tedavi", 22),
+                      splitText(Array.isArray(teeth) && teeth.length > 0 ? teeth.join(", ") : "-", 18),
+                      splitText(doctorName, 18),
+                      splitText(tr.status, 12),
+                      splitText(tr.note || "-", 30)
+                    ];
+                    // En fazla kaç satır var?
+                    const maxRows = Math.max(...columns.map(col => col.length));
+                    for (let row = 0; row < maxRows; row++) {
+                      // Her satırda tam tablo çizgileri ve arka plan
+                      page.drawRectangle({ x: 50, y: y-2, width: 490, height: 16, color: (idx%2===0 ? rgb(0.98,0.98,1) : rgb(0.93,0.96,0.99)), borderColor: rgb(0.8,0.85,0.95), borderWidth: 1 });
+                      // Dikey çizgiler
+                      page.drawLine({ start: { x: 130, y: y-2 }, end: { x: 130, y: y+14 }, color: rgb(0.7,0.8,0.9), thickness: 1 });
+                      page.drawLine({ start: { x: 210, y: y-2 }, end: { x: 210, y: y+14 }, color: rgb(0.7,0.8,0.9), thickness: 1 });
+                      page.drawLine({ start: { x: 300, y: y-2 }, end: { x: 300, y: y+14 }, color: rgb(0.7,0.8,0.9), thickness: 1 });
+                      page.drawLine({ start: { x: 400, y: y-2 }, end: { x: 400, y: y+14 }, color: rgb(0.7,0.8,0.9), thickness: 1 });
+                      // Yatay çizgi (alt kenar)
+                      page.drawLine({ start: { x: 50, y: y-2 }, end: { x: 540, y: y-2 }, color: rgb(0.7,0.8,0.9), thickness: 1 });
+                      // Her hücreyi alt satıra yaz
+                      page.drawText(columns[0][row] || "", { x: 60, y: y+2, size: 9, font, color: rgb(0,0,0) });
+                      page.drawText(columns[1][row] || "", { x: 140, y: y+2, size: 9, font, color: rgb(0,0,0) });
+                      page.drawText(columns[2][row] || "", { x: 220, y: y+2, size: 9, font, color: rgb(0,0,0) });
+                      page.drawText(columns[3][row] || "", { x: 310, y: y+2, size: 9, font, color: rgb(0,0,0) });
+                      page.drawText(columns[4][row] || "", { x: 410, y: y+2, size: 9, font, color: rgb(0,0,0) });
+                      y -= 16;
+                    }
+                    y -= 2;
                   });
                   y -= 10;
                 };
