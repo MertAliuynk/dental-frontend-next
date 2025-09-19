@@ -247,34 +247,35 @@ export default function NewPatientPageClient() {
             headers.Authorization = `Bearer ${token}`;
           }
           if (isEdit) {
-            // Hasta bilgilerini güncelle
-            const url = `https://dentalapi.karadenizdis.com/api/patient/${editingPatientId}`;
-            const bodyObj: any = {
-              firstName: form.firstName,
-              lastName: form.lastName,
-              phone: form.phone,
-              birthDate: form.birthDate,
-              anamnez: form.anamnez
-            };
-            const res = await fetch(url, {
-              method: "PUT",
-              headers,
-              body: JSON.stringify(bodyObj)
-            });
-            const data = await res.json();
-            if (data.success) {
-              // Doktor ilişkilerini güncelle
-              await fetch(`https://dentalapi.karadenizdis.com/api/patient/${editingPatientId}/doctors`, {
-                method: "POST",
+              // Hasta bilgilerini güncelle
+              const url = `https://dentalapi.karadenizdis.com/api/patient/${editingPatientId}`;
+              const bodyObj: any = {
+                firstName: form.firstName,
+                lastName: form.lastName,
+                phone: form.phone,
+                birthDate: form.birthDate,
+                anamnez: form.anamnez,
+                branchId: selectedBranch // Şube bilgisini ekle
+              };
+              const res = await fetch(url, {
+                method: "PUT",
                 headers,
-                body: JSON.stringify({ doctorIds: form.doctors.map(Number) })
+                body: JSON.stringify(bodyObj)
               });
-              setMessage("Hasta başarıyla güncellendi!");
-              router.push(`/patients/card/?id=${editingPatientId}`);
-              return;
-            } else {
-              setMessage(data.message || "Kayıt sırasında hata oluştu.");
-            }
+              const data = await res.json();
+              if (data.success) {
+                // Doktor ilişkilerini güncelle
+                await fetch(`https://dentalapi.karadenizdis.com/api/patient/${editingPatientId}/doctors`, {
+                  method: "POST",
+                  headers,
+                  body: JSON.stringify({ doctorIds: form.doctors.map(Number) })
+                });
+                setMessage("Hasta başarıyla güncellendi!");
+                router.push(`/patients/card/?id=${editingPatientId}`);
+                return;
+              } else {
+                setMessage(data.message || "Kayıt sırasında hata oluştu.");
+              }
           } else {
             // Yeni hasta ekle
             const url = "https://dentalapi.karadenizdis.com/api/patient";
