@@ -41,7 +41,7 @@ export default function Topbar({ fullWidth = false, onHamburger }: { fullWidth?:
       transition: "box-shadow .18s, background .18s"
     }}>
       {/* Hamburger button for mobile */}
-      <div className="topbar-hamburger" style={{ display: 'none', width: 40, height: 40, alignItems: 'center', justifyContent: 'center', position: 'absolute', left: 16 }}>
+      <div className="topbar-hamburger">
         <button
           aria-label="Menüyü Aç"
           onClick={onHamburger}
@@ -63,6 +63,18 @@ export default function Topbar({ fullWidth = false, onHamburger }: { fullWidth?:
           <span style={{ fontSize: 28, lineHeight: 1 }}>☰</span>
         </button>
       </div>
+      <style>{`
+        @media (max-width: 768px) {
+          .topbar-hamburger {
+            display: flex !important;
+          }
+        }
+        @media (min-width: 769px) {
+          .topbar-hamburger {
+            display: none !important;
+          }
+        }
+      `}</style>
       {/* Arama çubuğu kaldırıldı */}
     </header>
   );

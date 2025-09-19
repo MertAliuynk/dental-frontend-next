@@ -26,6 +26,9 @@ const diseaseList: string[] = [
 ];
 
 export default function NewPatientPageClient() {
+  // Şubeler state
+  const [branches, setBranches] = useState<any[]>([]);
+  const [selectedBranch, setSelectedBranch] = useState<string>("");
   // Ref for CSSTransition node
   const diseaseListRef = useRef<HTMLDivElement>(null);
   // Validasyon state'leri (hook'lar component fonksiyonunun içinde olmalı)
@@ -76,10 +79,19 @@ export default function NewPatientPageClient() {
       disMuayene: ""
     }
   });
-
+  useEffect(() => {
+    fetch("https://dentalapi.karadenizdis.com/api/branch")
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && Array.isArray(data.data)) {
+          setBranches(data.data);
+        }
+      });
+  }, []);
   // Doktorlar state
   const [doctors, setDoctors] = useState<any[]>([]);
   useEffect(() => {
+  // Şubeleri çek
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
     let branchId = null;
     let decoded = null;
@@ -124,7 +136,7 @@ export default function NewPatientPageClient() {
     const loadPatientForEdit = async () => {
       if (!editingPatientId) return;
       try {
-  const res = await fetch(`https://dentalapi.karadenizdis.com/api/patient/${editingPatientId}`);
+        const res = await fetch(`https://dentalapi.karadenizdis.com/api/patient/${editingPatientId}`);
         const data = await res.json();
         if (data.success && data.data) {
           const p = data.data;
@@ -138,6 +150,8 @@ export default function NewPatientPageClient() {
             birthDate: p.birth_date ? p.birth_date.split('T')[0] : "",
             // Not: anamnez ayrı tabloda; basitçe boş bırakıyoruz veya ileride doldurulabilir
           }));
+          // Hasta şubesi default seçili olsun
+          setSelectedBranch(p.branch_id ? String(p.branch_id) : "");
         }
       } catch {}
     };
@@ -394,6 +408,23 @@ export default function NewPatientPageClient() {
             <label className="np-label">Doğum Tarihi:*
               <input name="birthDate" type="date" value={form.birthDate} onChange={handleChange} required className="np-input" />
             </label>
+            {editingPatientId && (
+              <label className="np-label" style={{marginTop: 2}}>Şube Seçimi:*
+                <select
+                  name="branch_id"
+                  value={selectedBranch}
+                  onChange={e => setSelectedBranch(e.target.value)}
+                  required
+                  className="np-input"
+                  style={{width: "100%", padding: "10px 14px", borderRadius: 8, border: "1.5px solid #dbeafe", fontSize: 15, marginTop: 4, marginBottom: 4, background: "#f8fafc"}}
+                >
+                  <option value="" style={{color: '#1a237e', fontWeight: 700}}>Şube seçiniz</option>
+                  {branches.map((b: any) => (
+                    <option key={b.branch_id} value={b.branch_id} style={{color: '#1a237e', fontWeight: 700}}>{b.name}</option>
+                  ))}
+                </select>
+              </label>
+            )}
           </div>
         </section>
 

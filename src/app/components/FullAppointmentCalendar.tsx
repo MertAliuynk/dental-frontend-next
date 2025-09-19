@@ -403,6 +403,7 @@ export default function FullAppointmentCalendar() {
             notes: not,
             branchId,
             status: 'saatkapatildi',
+            created_by: user?.user_id || null,
           })
         });
         const data = await res.json();
@@ -439,6 +440,7 @@ export default function FullAppointmentCalendar() {
           duration: createForm.duration,
           notes,
           branchId,
+          created_by: user?.user_id || null,
         })
       });
       const data = await res.json();
@@ -1038,6 +1040,13 @@ export default function FullAppointmentCalendar() {
               </div>
               <div style={{ fontWeight: 700 }}><span>TC: </span><span style={{ fontWeight: 800 }}>{summaryData.patient?.tc_number || '-'}</span></div>
               <div style={{ fontWeight: 700 }}><span>Telefon: </span><span style={{ fontWeight: 800 }}>{summaryData.patient?.phone || '-'}</span></div>
+              {/* Oluşturan hesap bilgisi */}
+              <div style={{ gridColumn: '1 / -1', fontWeight: 700, color: '#1976d2', marginTop: 8 }}>
+                <span>Bu randevuyu oluşturan hesap : </span>
+                <span style={{ fontWeight: 800 }}>
+                  {summaryData.event?.created_by ? `#${summaryData.event.created_by}` : 'Bilinmiyor'}
+                </span>
+              </div>
             </div>
 
             {/* Edit form */}

@@ -52,14 +52,28 @@ const MiniAppointmentCalendar: React.FC = () => {
   const [doctorOrders, setDoctorOrders] = useState<any[]>([]);
   const [events, setEvents] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(false);
+  const [role, setRole] = useState<string>("");
+  const [userId, setUserId] = useState<number | null>(null);
 
-  // Kullanıcı şubesi ve rolü localStorage'dan alınacak (gelişmiş auth varsa burası değişebilir)
+  // Kullanıcı rolü ve id'sini localStorage'dan al
   useEffect(() => {
-    // Şube id'si ve rolü localStorage'dan al
+    if (typeof window !== "undefined") {
+      setRole(localStorage.getItem("role") || "");
+      const userStr = localStorage.getItem("user");
+      if (userStr) {
+        try {
+          const user = JSON.parse(userStr);
+          setUserId(user.user_id);
+        } catch {}
+      }
+    }
+  }, []);
+
+  // Doktorları ve sıralama verisini çek
+  useEffect(() => {
     const branchId = localStorage.getItem("branchId");
     if (!branchId) return;
     setLoading(true);
-    // Doktorları ve sıralama verisini paralel çek
     Promise.all([
       fetch(`https://dentalapi.karadenizdis.com/api/branch/${branchId}/doctors`).then(res => res.json()),
       fetch('https://dentalapi.karadenizdis.com/api/doctor-order/doctor-order').then(res => res.json())
@@ -70,7 +84,6 @@ const MiniAppointmentCalendar: React.FC = () => {
       }
       const orders = orderRes.success && Array.isArray(orderRes.data) ? orderRes.data : [];
       setDoctorOrders(orders);
-      // Sıralama: önce order_num'u olanlar küçükten büyüğe, sonra order_num'u olmayanlar
       const sorted = [
         ...orders
           .map((order: any) => {
@@ -81,9 +94,14 @@ const MiniAppointmentCalendar: React.FC = () => {
           .filter(Boolean),
         ...doctorList.filter(d => !orders.some((o: any) => String(o.doctor_id) === String(d.id))).map(d => ({ ...d, order_num: 9999 }))
       ];
-      setDoctors(sorted as Doctor[]);
+      // Eğer rol doktor ise sadece kendi doktorunu göster
+      if (role === "doctor" && userId) {
+        setDoctors(sorted.filter((d: any) => String(d.id) === String(userId)) as Doctor[]);
+      } else {
+        setDoctors(sorted as Doctor[]);
+      }
     }).catch(() => setDoctors([])).finally(() => setLoading(false));
-  }, []);
+  }, [role, userId]);
 
   // Doktorlar değişince bugünkü randevuları çek
   useEffect(() => {
@@ -116,10 +134,15 @@ const MiniAppointmentCalendar: React.FC = () => {
           })
       )
     ).then(results => {
-      setEvents(results.flat());
+      let allEvents = results.flat();
+      // Eğer rol doktor ise sadece kendi randevularını göster
+      if (role === "doctor" && userId) {
+        allEvents = allEvents.filter(ev => String(ev.doctorId) === String(userId));
+      }
+      setEvents(allEvents);
       setLoading(false);
     });
-  }, [doctors]);
+  }, [doctors, role, userId]);
 
   // Takvimde her doktoru ayrı kaynak (resource) olarak göster
   const resources = doctors.map(d => ({ resourceId: d.id, resourceTitle: d.name }));
