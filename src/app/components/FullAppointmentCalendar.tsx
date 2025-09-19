@@ -1044,7 +1044,9 @@ export default function FullAppointmentCalendar() {
               <div style={{ gridColumn: '1 / -1', fontWeight: 700, color: '#1976d2', marginTop: 8 }}>
                 <span>Bu randevuyu oluşturan hesap : </span>
                 <span style={{ fontWeight: 800 }}>
-                  {summaryData.event?.created_by ? `#${summaryData.event.created_by}` : 'Bilinmiyor'}
+                  {summaryData.event?.created_by_first_name || summaryData.event?.created_by_last_name
+                    ? `${summaryData.event.created_by_first_name || ''} ${summaryData.event.created_by_last_name || ''}`.trim()
+                    : 'Bilinmiyor'}
                 </span>
               </div>
             </div>
