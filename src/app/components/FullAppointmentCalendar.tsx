@@ -571,9 +571,17 @@ export default function FullAppointmentCalendar() {
       order_num: 9999
     }));
   }
-  // permanentCount kadarını ana ekranda göster, kalanları kaydırmalı olarak ayarla
-  const resources = isAllDoctors ? orderedDoctors : undefined;
-  // Takvimde ilk permanentCount kadar doktor ana ekranda, kalanlar sağ-sol ile kaydırmalı olarak gösterilecek şekilde UI'da ayarlayabilirsin.
+
+  // Kaydırma için state
+  const [doctorPage, setDoctorPage] = useState(0);
+  const maxPage = Math.max(0, Math.ceil(orderedDoctors.length / permanentCount) - 1);
+  // Sadece ilgili sayfadaki doktorları göster
+  const pagedDoctors = isAllDoctors
+    ? orderedDoctors.slice(doctorPage * permanentCount, (doctorPage + 1) * permanentCount)
+    : undefined;
+  const resources = isAllDoctors ? pagedDoctors : undefined;
+
+  // UI'da ileri/geri butonları
 
   return (
   <div style={{ minHeight: '100vh', background: '#f5f7fb', overflowX: 'auto', maxWidth: '100vw', boxSizing: 'border-box', padding: 0 }}>
@@ -668,6 +676,22 @@ export default function FullAppointmentCalendar() {
 
       {/* Calendar */}
       <div style={{ maxWidth: 1800, margin: '16px auto', padding: '16px' }}>
+        {/* Doktor kaydırma butonları */}
+        {isAllDoctors && (
+          <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+            <button
+              onClick={() => setDoctorPage(p => Math.max(0, p - 1))}
+              disabled={doctorPage === 0}
+              style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid #cbd5e1', background: doctorPage === 0 ? '#e5e7eb' : '#fff', color: '#0f172a', fontWeight: 700, cursor: doctorPage === 0 ? 'not-allowed' : 'pointer' }}
+            >←</button>
+            <span style={{ fontWeight: 700, color: '#1f3755' }}>Doktorlar: {doctorPage + 1} / {maxPage + 1}</span>
+            <button
+              onClick={() => setDoctorPage(p => Math.min(maxPage, p + 1))}
+              disabled={doctorPage === maxPage}
+              style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid #cbd5e1', background: doctorPage === maxPage ? '#e5e7eb' : '#fff', color: '#0f172a', fontWeight: 700, cursor: doctorPage === maxPage ? 'not-allowed' : 'pointer' }}
+            >→</button>
+          </div>
+        )}
         <DnDCalendar
           localizer={localizer}
           culture="tr-TR"
