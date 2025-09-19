@@ -1696,7 +1696,7 @@ function BranchManagement() {
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<any>(null);
-  const [form, setForm] = useState({ name: '', address: '' });
+  const [form, setForm] = useState<{ name: string; address: string; permanent_doctor_count: number }>({ name: '', address: '', permanent_doctor_count: 3 });
 
   const fetchBranches = async () => {
     try {
@@ -1713,9 +1713,9 @@ function BranchManagement() {
   }, []);
 
   const reset = () => {
-    setEditing(null);
-    setForm({ name: '', address: '' });
-    setShowForm(false);
+  setEditing(null);
+  setForm({ name: '', address: '', permanent_doctor_count: 3 });
+  setShowForm(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -1723,12 +1723,17 @@ function BranchManagement() {
     if (!form.name.trim()) { alert('Şube adı zorunludur'); return; }
     setLoading(true);
     try {
-  const url = editing ? `https://dentalapi.karadenizdis.com/api/branch/${editing.branch_id}` : 'https://dentalapi.karadenizdis.com/api/branch';
+      const url = editing ? `https://dentalapi.karadenizdis.com/api/branch/${editing.branch_id}` : 'https://dentalapi.karadenizdis.com/api/branch';
       const method = editing ? 'PUT' : 'POST';
+      const bodyObj: any = {
+        name: form.name.trim(),
+        address: form.address || null,
+        permanent_doctor_count: Number(form.permanent_doctor_count)
+      };
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: form.name.trim(), address: form.address || null })
+        body: JSON.stringify(bodyObj)
       });
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.message || 'İşlem başarısız');
@@ -1744,7 +1749,11 @@ function BranchManagement() {
 
   const handleEdit = (b: any) => {
     setEditing(b);
-    setForm({ name: b.name || '', address: b.address || '' });
+    setForm({
+      name: b.name || '',
+      address: b.address || '',
+      permanent_doctor_count: typeof b.permanent_doctor_count === 'number' ? b.permanent_doctor_count : 3
+    });
     setShowForm(true);
   };
 
@@ -1765,7 +1774,7 @@ function BranchManagement() {
     <div style={{ background: 'white', borderRadius: 12, padding: 24, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <h2 style={{ margin: 0, color: '#1a237e', fontSize: 20 }}>🏢 Şubeler</h2>
-        <button onClick={() => { setShowForm(true); setEditing(null); setForm({ name: '', address: '' }); }} style={{ padding: '10px 16px', background: '#4caf50', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>+ Yeni Şube</button>
+  <button onClick={() => { setShowForm(true); setEditing(null); setForm({ name: '', address: '', permanent_doctor_count: 3 }); }} style={{ padding: '10px 16px', background: '#4caf50', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>+ Yeni Şube</button>
       </div>
 
       <div style={{ overflowX: 'auto' }}>
@@ -1810,6 +1819,10 @@ function BranchManagement() {
                 <div>
                   <label style={{ display: 'block', fontSize: 13, color: '#555', marginBottom: 6 }}>Adres (opsiyonel)</label>
                   <textarea value={form.address} onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))} placeholder="Adres bilgisi" style={{ width: '100%', padding: 10, border: '1px solid #ddd', borderRadius: 6, minHeight: 80, color: '#222', fontWeight: 700 }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, color: '#555', marginBottom: 6 }}>Devamlı Doktor Sayısı</label>
+                  <input type="number" min={1} max={20} value={form.permanent_doctor_count} onChange={e => setForm(f => ({ ...f, permanent_doctor_count: Number(e.target.value) }))} placeholder="Örn. 3" style={{ width: '100%', padding: 10, border: '1px solid #ddd', borderRadius: 6, color: '#222', fontWeight: 700 }} />
                 </div>
               </div>
               <div style={{ marginTop: 16, display: 'flex', justifyContent: 'flex-end', gap: 8 }}>

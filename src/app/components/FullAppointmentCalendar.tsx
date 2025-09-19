@@ -534,30 +534,46 @@ export default function FullAppointmentCalendar() {
   };
 
   // Resources for all doctors (order_num'a göre sıralı)
-  const resources = isAllDoctors
-    ? [
-        // Önce sırası olan doktorlar
-        ...doctorOrders
-          .map((order: any) => {
-            const doctor = doctors.find((d: any) => String(d.user_id) === String(order.doctor_id));
-            if (!doctor) return null;
-            return {
-              resourceId: doctor.user_id,
-              resourceTitle: `${doctor.first_name} ${doctor.last_name}`,
-              order_num: order.order_num
-            };
-          })
-          .filter(Boolean),
-        // Sonra sırası olmayan doktorlar
-        ...doctors
-          .filter((d: any) => !doctorOrders.some((o: any) => String(o.doctor_id) === String(d.user_id)))
-          .map((d: any) => ({
-            resourceId: d.user_id,
-            resourceTitle: `${d.first_name} ${d.last_name}`,
-            order_num: 9999 // Sona ekle
-          }))
-      ]
-    : undefined;
+  // Şubedeki permanent_doctor_count kadar doktoru ana ekranda göster, kalanları sağ-sol ile kaydır
+  let permanentCount = 3;
+  if (branches && branchId) {
+    const branch = branches.find((b: any) => String(b.branch_id) === String(branchId));
+    if (branch && typeof branch.permanent_doctor_count === 'number') permanentCount = branch.permanent_doctor_count;
+  }
+  let orderedDoctors: any[] = [];
+  if (doctorOrders.length > 0) {
+    orderedDoctors = doctorOrders
+      .map((order: any) => {
+        const doctor = doctors.find((d: any) => String(d.user_id) === String(order.doctor_id));
+        if (!doctor) return null;
+        return {
+          resourceId: doctor.user_id,
+          resourceTitle: `${doctor.first_name} ${doctor.last_name}`,
+          order_num: order.order_num
+        };
+      })
+      .filter(Boolean);
+    // Sırası olmayanları sona ekle
+    orderedDoctors = [
+      ...orderedDoctors,
+      ...doctors
+        .filter((d: any) => !doctorOrders.some((o: any) => String(o.doctor_id) === String(d.user_id)))
+        .map((d: any) => ({
+          resourceId: d.user_id,
+          resourceTitle: `${d.first_name} ${d.last_name}`,
+          order_num: 9999
+        }))
+    ];
+  } else {
+    orderedDoctors = doctors.map((d: any) => ({
+      resourceId: d.user_id,
+      resourceTitle: `${d.first_name} ${d.last_name}`,
+      order_num: 9999
+    }));
+  }
+  // permanentCount kadarını ana ekranda göster, kalanları kaydırmalı olarak ayarla
+  const resources = isAllDoctors ? orderedDoctors : undefined;
+  // Takvimde ilk permanentCount kadar doktor ana ekranda, kalanlar sağ-sol ile kaydırmalı olarak gösterilecek şekilde UI'da ayarlayabilirsin.
 
   return (
   <div style={{ minHeight: '100vh', background: '#f5f7fb', overflowX: 'auto', maxWidth: '100vw', boxSizing: 'border-box', padding: 0 }}>
