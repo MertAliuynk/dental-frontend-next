@@ -573,7 +573,7 @@ export default function PatientCardPageClient() {
                       splitText(Array.isArray(teeth) && teeth.length > 0 ? teeth.join(", ") : "-", 18),
                       splitText(doctorName, 18),
                       splitText(tr.status, 12),
-                      splitText(tr.note || "-", 30)
+                      splitText(tr.notes || tr.note || "-", 30)
                     ];
                     // En fazla kaç satır var?
                     const maxRows = Math.max(...columns.map(col => col.length));
