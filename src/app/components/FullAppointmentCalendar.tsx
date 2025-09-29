@@ -376,13 +376,28 @@ export default function FullAppointmentCalendar() {
     const params = new URLSearchParams();
     params.set('limit', '20');
     params.set('offset', String(offset));
-    if (q.trim()) params.set('search', q.trim());
+    // Arama terimini normalize et - fazla boşlukları temizle ve küçük harfe çevir
+    const normalizedQuery = q.trim().replace(/\s+/g, ' ').toLowerCase();
+    if (normalizedQuery) params.set('search', normalizedQuery);
     // Şube filtreleme
     if (createForm.selectedBranchId) params.set('branch_id', String(createForm.selectedBranchId));
     const res = await fetch(`https://dentalapi.karadenizdis.com/api/patient?${params.toString()}`);
     const data = await res.json();
     if (data?.success) {
-      setCreateForm(f => ({ ...f, patientList: offset === 0 ? data.data : [...f.patientList, ...data.data], patientOffset: offset }));
+      // Client-side'da da filtreleme yap - normalize edilmiş isimlerle karşılaştır
+      let filteredData = data.data;
+      if (normalizedQuery && normalizedQuery.length > 0) {
+        filteredData = data.data.filter((p: any) => {
+          const patientFullName = `${p.first_name || ''} ${p.last_name || ''}`.trim().replace(/\s+/g, ' ').toLowerCase();
+          const patientPhone = (p.phone || '').toLowerCase();
+          const patientTC = (p.tc_number || '').toLowerCase();
+          
+          return patientFullName.includes(normalizedQuery) || 
+                 patientPhone.includes(normalizedQuery) || 
+                 patientTC.includes(normalizedQuery);
+        });
+      }
+      setCreateForm(f => ({ ...f, patientList: offset === 0 ? filteredData : [...f.patientList, ...filteredData], patientOffset: offset }));
     }
   };
 
@@ -479,6 +494,29 @@ export default function FullAppointmentCalendar() {
   const updateCurrentAppointment = async () => {
     const a = summaryData?.event;
     if (!a?.appointment_id) return;
+    
+    // Durum değişikliği kontrolü ve not zorunluluğu
+    const isStatusChanged = (editFields.status || '') !== (a.status || 'scheduled');
+    const currentNotes = (editFields.notes || '').trim();
+    const originalNotes = (a.notes || '').trim();
+    
+    if (isStatusChanged && currentNotes === originalNotes) {
+      alert('Durum değiştirirken not eklenmesi zorunludur. Lütfen not alanına açıklama ekleyin.');
+      // Not alanını kırmızı yap
+      const noteTextarea = document.querySelector('textarea[rows="3"]') as HTMLTextAreaElement;
+      if (noteTextarea) {
+        noteTextarea.style.border = '2px solid #dc2626';
+        noteTextarea.style.backgroundColor = '#fef2f2';
+        noteTextarea.focus();
+        // 3 saniye sonra normal rengine döndür
+        setTimeout(() => {
+          noteTextarea.style.border = '1px solid #d1d5db';
+          noteTextarea.style.backgroundColor = '#ffffff';
+        }, 3000);
+      }
+      return;
+    }
+    
     try {
       setUpdating(true);
       // Build ISO time from date + time

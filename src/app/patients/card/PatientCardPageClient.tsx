@@ -871,7 +871,7 @@ export default function PatientCardPageClient() {
       )}
             <div className="patient-card-main-grid" style={{ display: "flex", gap: 32, flexWrap: "wrap", alignItems: 'flex-start', animation: 'fadeIn .5s cubic-bezier(.4,2,.6,1)' }}>
               {/* Hasta Bilgileri Kartı */}
-              <div className="patient-info-card animated-card" style={{ background: "linear-gradient(120deg, #fafdff 60%, #e3eaff 100%)", borderRadius: 22, boxShadow: "0 8px 32px #0d1a4a22, 0 1.5px 0 #1976d2", padding: 28, minWidth: 260, maxWidth: 340, height: 440, flex: "1 1 260px", display: "flex", flexDirection: "column", gap: 14, position: "relative", border: '2px solid #1976d2', transition: 'box-shadow .22s, transform .22s', animation: 'popIn .6s cubic-bezier(.4,2,.6,1)' }}>
+              <div className="patient-info-card animated-card" style={{ background: "linear-gradient(120deg, #fafdff 60%, #e3eaff 100%)", borderRadius: 22, boxShadow: "0 8px 32px #0d1a4a22, 0 1.5px 0 #1976d2", padding: 28, minWidth: 300, maxWidth: 400, height: 520, flex: "1 1 300px", display: "flex", flexDirection: "column", gap: 14, position: "relative", border: '2px solid #1976d2', transition: 'box-shadow .22s, transform .22s', animation: 'popIn .6s cubic-bezier(.4,2,.6,1)' }}>
                 <div style={{ fontWeight: 900, fontSize: 22, color: "#1976d2", letterSpacing: 0.2, textShadow: "0 2px 8px #e3eaff77", display: 'flex', alignItems: 'center', gap: 8 }}>
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#1976d2" opacity="0.12"/><path d="M12 12c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V20h14v-2.5c0-2.33-4.67-3.5-7-3.5z" fill="#1976d2"/></svg>
                   {patient.first_name} {patient.last_name}
@@ -897,14 +897,121 @@ export default function PatientCardPageClient() {
                   <span style={{ transition: 'transform .18s', display: 'inline-block', transform: notesOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>▼</span> Notlar
                 </div>
                 {notesOpen && (
-                  <div style={{ fontSize: 14, color: "#444", marginLeft: 12, maxHeight: 120, overflowY: "auto", marginTop: 4, border: "1.5px solid #e3eaff", borderRadius: 10, padding: 10, background: "#fafdff", boxShadow: '0 2px 8px #e3eaff33', animation: 'fadeIn .3s' }}>
-                    <ul style={{ margin: 0, padding: 0, listStyle: 'disc inside' }}>
-                      {patientNotes.length === 0 ? <li>Not yok</li> : patientNotes.map((n, i) => (
-                        <li key={n.note_id}>
-                          <span style={{ fontWeight: 600, color: '#1976d2' }}>{new Date(n.created_at).toLocaleString('tr-TR')}</span>: {n.note}
-                        </li>
-                      ))}
-                    </ul>
+                  <div style={{ 
+                    fontSize: 14, 
+                    color: "#444", 
+                    marginTop: 8, 
+                    border: "2px solid #e3eaff", 
+                    borderRadius: 12, 
+                    background: "linear-gradient(135deg, #fafdff 0%, #f0f7ff 100%)", 
+                    boxShadow: '0 4px 20px rgba(25, 118, 210, 0.08)', 
+                    animation: 'fadeIn .3s',
+                    width: '100%',
+                    maxWidth: 'none',
+                    overflow: 'hidden'
+                  }}>
+                    <div style={{ 
+                      padding: '16px 20px 12px 20px',
+                      fontWeight: 700, 
+                      color: '#1976d2', 
+                      fontSize: 16, 
+                      borderBottom: '2px solid #e3eaff',
+                      background: '#ffffff',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between'
+                    }}>
+                      <span>📝 Hasta Notları</span>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: '#666', background: '#f1f5f9', padding: '2px 8px', borderRadius: 12 }}>
+                        {patientNotes.length} adet
+                      </span>
+                    </div>
+                    <div style={{ 
+                      maxHeight: patientNotes.length > 2 ? '320px' : 'auto',
+                      overflowY: patientNotes.length > 2 ? 'auto' : 'visible',
+                      padding: '16px 20px',
+                      scrollbarWidth: 'thin',
+                      scrollbarColor: '#cbd5e1 #f8fafc'
+                    }}>
+                      {patientNotes.length === 0 ? (
+                        <div style={{ 
+                          textAlign: 'center', 
+                          padding: 24, 
+                          color: '#666', 
+                          fontStyle: 'italic',
+                          background: '#f8fafc',
+                          borderRadius: 8,
+                          border: '1px dashed #cbd5e1'
+                        }}>
+                          Henüz not eklenmemiş
+                        </div>
+                      ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                          {patientNotes.map((n, i) => (
+                            <div key={n.note_id} style={{ 
+                              background: '#ffffff', 
+                              border: '1px solid #e5e7eb', 
+                              borderRadius: 8, 
+                              padding: 12,
+                              boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                              transition: 'all 0.2s ease',
+                              position: 'relative'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.transform = 'translateX(4px)';
+                              e.currentTarget.style.borderColor = '#3b82f6';
+                              e.currentTarget.style.boxShadow = '0 4px 12px rgba(59,130,246,0.15)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.transform = 'translateX(0)';
+                              e.currentTarget.style.borderColor = '#e5e7eb';
+                              e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)';
+                            }}>
+                              <div style={{ 
+                                fontSize: 12, 
+                                fontWeight: 600, 
+                                color: '#6b7280', 
+                                marginBottom: 6,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 4
+                              }}>
+                                <span style={{ fontSize: 10 }}>🕒</span>
+                                {new Date(n.created_at).toLocaleDateString('tr-TR')} • {new Date(n.created_at).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
+                              </div>
+                              <div style={{ 
+                                fontSize: 14, 
+                                lineHeight: 1.5, 
+                                color: '#374151',
+                                wordWrap: 'break-word',
+                                whiteSpace: 'pre-wrap',
+                                maxHeight: '80px',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                display: '-webkit-box',
+                                WebkitLineClamp: 4,
+                                WebkitBoxOrient: 'vertical'
+                              }}>
+                                {n.note}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    {patientNotes.length > 2 && (
+                      <div style={{ 
+                        padding: '8px 20px 12px 20px',
+                        borderTop: '1px solid #e5e7eb',
+                        background: '#f8fafc',
+                        fontSize: 12,
+                        color: '#6b7280',
+                        textAlign: 'center',
+                        fontStyle: 'italic'
+                      }}>
+                        Daha fazla not görmek için kaydırın
+                      </div>
+                    )}
                   </div>
                 )}
                 <div style={{ fontSize: 15, color: "#2d3a4a", marginTop: 8, cursor: "pointer", fontWeight: 700, transition: 'color .18s' }} onClick={() => setAnamnesisOpen(v => !v)}>
