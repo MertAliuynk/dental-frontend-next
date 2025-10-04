@@ -180,9 +180,7 @@ export default function NewPatientPageClient() {
       setForm(f => ({ ...f, phone: value }));
       if (value.length === 0) {
         setPhoneError("");
-      } else if (value.length !== 10 && value.length !== 11) {
-        setPhoneError("Telefon numarası 10 veya 11 haneli olmalı.");
-      } else {
+      }  else {
         setPhoneError("");
       }
       return;
@@ -233,11 +231,6 @@ export default function NewPatientPageClient() {
             setLoading(false);
             return;
           }
-        }
-        if (form.phone.length !== 10 && form.phone.length !== 11) {
-          setMessage("Telefon numarası 10 veya 11 haneli olmalı.");
-          setLoading(false);
-          return;
         }
         try {
           // Token'ı localStorage'dan al
@@ -361,7 +354,6 @@ export default function NewPatientPageClient() {
                 value={form.phone}
                 onChange={handleChange}
                 required
-                maxLength={11}
                 className={`np-input${phoneError ? ' np-input-error' : ''}`}
               />
               {phoneError && <span className="np-error-text">{phoneError}</span>}

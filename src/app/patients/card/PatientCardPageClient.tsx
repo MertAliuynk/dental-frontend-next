@@ -870,8 +870,8 @@ export default function PatientCardPageClient() {
         </div>
       )}
             <div className="patient-card-main-grid" style={{ display: "flex", gap: 32, flexWrap: "wrap", alignItems: 'flex-start', animation: 'fadeIn .5s cubic-bezier(.4,2,.6,1)' }}>
-              {/* Hasta Bilgileri Kartı */}
-              <div className="patient-info-card animated-card" style={{ background: "linear-gradient(120deg, #fafdff 60%, #e3eaff 100%)", borderRadius: 22, boxShadow: "0 8px 32px #0d1a4a22, 0 1.5px 0 #1976d2", padding: 28, minWidth: 300, maxWidth: 400, height: 520, flex: "1 1 300px", display: "flex", flexDirection: "column", gap: 14, position: "relative", border: '2px solid #1976d2', transition: 'box-shadow .22s, transform .22s', animation: 'popIn .6s cubic-bezier(.4,2,.6,1)' }}>
+                {/* Hasta Bilgileri Kartı */}
+              <div className="patient-info-card animated-card" style={{ background: "linear-gradient(120deg, #fafdff 60%, #e3eaff 100%)", borderRadius: 22, boxShadow: "0 8px 32px #0d1a4a22, 0 1.5px 0 #1976d2", padding: 28, minWidth: 300, maxWidth: 400, height: 420, flex: "1 1 300px", display: "flex", flexDirection: "column", gap: 14, position: "relative", border: '2px solid #1976d2', transition: 'box-shadow .22s, transform .22s', animation: 'popIn .6s cubic-bezier(.4,2,.6,1)' }}>
                 <div style={{ fontWeight: 900, fontSize: 22, color: "#1976d2", letterSpacing: 0.2, textShadow: "0 2px 8px #e3eaff77", display: 'flex', alignItems: 'center', gap: 8 }}>
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#1976d2" opacity="0.12"/><path d="M12 12c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V20h14v-2.5c0-2.33-4.67-3.5-7-3.5z" fill="#1976d2"/></svg>
                   {patient.first_name} {patient.last_name}
@@ -892,128 +892,7 @@ export default function PatientCardPageClient() {
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#1976d2" opacity="0.10"/><path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm0 10c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6z" fill="#1976d2"/></svg>
                   Doğum Tarihi: {patient.birth_date ? patient.birth_date.slice(0,10) : "-"}
                 </div>
-                {/* Hasta Notları Açılır Alan */}
-                <div style={{ fontSize: 15, color: "#2d3a4a", marginTop: 8, cursor: "pointer", fontWeight: 700, transition: 'color .18s' }} onClick={() => setNotesOpen(v => !v)}>
-                  <span style={{ transition: 'transform .18s', display: 'inline-block', transform: notesOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>▼</span> Notlar
-                </div>
-                {notesOpen && (
-                  <div style={{ 
-                    fontSize: 14, 
-                    color: "#444", 
-                    marginTop: 8, 
-                    border: "2px solid #e3eaff", 
-                    borderRadius: 12, 
-                    background: "linear-gradient(135deg, #fafdff 0%, #f0f7ff 100%)", 
-                    boxShadow: '0 4px 20px rgba(25, 118, 210, 0.08)', 
-                    animation: 'fadeIn .3s',
-                    width: '100%',
-                    maxWidth: 'none',
-                    overflow: 'hidden'
-                  }}>
-                    <div style={{ 
-                      padding: '16px 20px 12px 20px',
-                      fontWeight: 700, 
-                      color: '#1976d2', 
-                      fontSize: 16, 
-                      borderBottom: '2px solid #e3eaff',
-                      background: '#ffffff',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between'
-                    }}>
-                      <span>📝 Hasta Notları</span>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: '#666', background: '#f1f5f9', padding: '2px 8px', borderRadius: 12 }}>
-                        {patientNotes.length} adet
-                      </span>
-                    </div>
-                    <div style={{ 
-                      maxHeight: patientNotes.length > 2 ? '320px' : 'auto',
-                      overflowY: patientNotes.length > 2 ? 'auto' : 'visible',
-                      padding: '16px 20px',
-                      scrollbarWidth: 'thin',
-                      scrollbarColor: '#cbd5e1 #f8fafc'
-                    }}>
-                      {patientNotes.length === 0 ? (
-                        <div style={{ 
-                          textAlign: 'center', 
-                          padding: 24, 
-                          color: '#666', 
-                          fontStyle: 'italic',
-                          background: '#f8fafc',
-                          borderRadius: 8,
-                          border: '1px dashed #cbd5e1'
-                        }}>
-                          Henüz not eklenmemiş
-                        </div>
-                      ) : (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                          {patientNotes.map((n, i) => (
-                            <div key={n.note_id} style={{ 
-                              background: '#ffffff', 
-                              border: '1px solid #e5e7eb', 
-                              borderRadius: 8, 
-                              padding: 12,
-                              boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-                              transition: 'all 0.2s ease',
-                              position: 'relative'
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.transform = 'translateX(4px)';
-                              e.currentTarget.style.borderColor = '#3b82f6';
-                              e.currentTarget.style.boxShadow = '0 4px 12px rgba(59,130,246,0.15)';
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.transform = 'translateX(0)';
-                              e.currentTarget.style.borderColor = '#e5e7eb';
-                              e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)';
-                            }}>
-                              <div style={{ 
-                                fontSize: 12, 
-                                fontWeight: 600, 
-                                color: '#6b7280', 
-                                marginBottom: 6,
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 4
-                              }}>
-                                <span style={{ fontSize: 10 }}>🕒</span>
-                                {new Date(n.created_at).toLocaleDateString('tr-TR')} • {new Date(n.created_at).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
-                              </div>
-                              <div style={{ 
-                                fontSize: 14, 
-                                lineHeight: 1.5, 
-                                color: '#374151',
-                                wordWrap: 'break-word',
-                                whiteSpace: 'pre-wrap',
-                                maxHeight: '80px',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                display: '-webkit-box',
-                                WebkitLineClamp: 4,
-                                WebkitBoxOrient: 'vertical'
-                              }}>
-                                {n.note}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                    {patientNotes.length > 2 && (
-                      <div style={{ 
-                        padding: '8px 20px 12px 20px',
-                        borderTop: '1px solid #e5e7eb',
-                        background: '#f8fafc',
-                        fontSize: 12,
-                        color: '#6b7280',
-                        textAlign: 'center',
-                        fontStyle: 'italic'
-                      }}>
-                        Daha fazla not görmek için kaydırın
-                      </div>
-                    )}
-                  </div>
-                )}
+                
                 <div style={{ fontSize: 15, color: "#2d3a4a", marginTop: 8, cursor: "pointer", fontWeight: 700, transition: 'color .18s' }} onClick={() => setAnamnesisOpen(v => !v)}>
                   <span style={{ transition: 'transform .18s', display: 'inline-block', transform: anamnesisOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>▼</span> Anamnez
                 </div>
@@ -1422,6 +1301,250 @@ export default function PatientCardPageClient() {
                 </div>
               </div>
             </div>
+            {/* Hasta Notları Bölümü - Sayfanın Altında */}
+            <div style={{ 
+              marginTop: 40, 
+              background: 'linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%)',
+              borderRadius: 24,
+              border: '2px solid #e3eaff',
+              boxShadow: '0 8px 32px rgba(59, 130, 246, 0.1)',
+              overflow: 'hidden',
+              animation: 'fadeIn 0.6s ease-out'
+            }}>
+              {/* Header */}
+              <div style={{
+                background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
+                padding: '20px 28px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                color: 'white'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{
+                    background: 'rgba(255,255,255,0.2)',
+                    borderRadius: '50%',
+                    padding: 8,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <span style={{ fontSize: 20 }}>📝</span>
+                  </div>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>Hasta Notları</h3>
+                    <div style={{ fontSize: 14, opacity: 0.9, marginTop: 2 }}>
+                      Toplam {patientNotes.length} not bulunuyor
+                    </div>
+                  </div>
+                </div>
+                {patientNotes.length > 0 && (
+                  <div style={{ 
+                    background: 'rgba(255,255,255,0.15)',
+                    padding: '8px 16px',
+                    borderRadius: 12,
+                    fontSize: 13,
+                    fontWeight: 500
+                  }}>
+                    Son Güncelleme: {new Date(patientNotes[0]?.created_at).toLocaleDateString('tr-TR')}
+                  </div>
+                )}
+              </div>
+
+              {/* Content */}
+              <div style={{ padding: '24px 28px' }}>
+                {patientNotes.length === 0 ? (
+                  <div style={{
+                    textAlign: 'center',
+                    padding: '60px 20px',
+                    color: '#64748b',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: 16
+                  }}>
+                    <div style={{
+                      width: 80,
+                      height: 80,
+                      borderRadius: '50%',
+                      background: 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: 32,
+                      marginBottom: 8
+                    }}>
+                      📋
+                    </div>
+                    <h4 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#475569' }}>
+                      Henüz not eklenmemiş
+                    </h4>
+                    <p style={{ margin: 0, fontSize: 14, color: '#64748b', maxWidth: 400 }}>
+                      Bu hasta için henüz hiçbir not eklenmemiş. İlk notu eklemek için yukarıdaki "Not Ekle" butonunu kullanabilirsiniz.
+                    </p>
+                  </div>
+                ) : (
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
+                    gap: 20,
+                    maxHeight: '600px',
+                    overflowY: 'auto',
+                    padding: '4px',
+                    scrollbarWidth: 'thin',
+                    scrollbarColor: '#cbd5e1 #f1f5f9'
+                  }}>
+                    {patientNotes.map((note, index) => (
+                      <div key={note.note_id} style={{
+                        background: '#ffffff',
+                        borderRadius: 16,
+                        border: '1px solid #e2e8f0',
+                        padding: 20,
+                        boxShadow: '0 4px 12px rgba(59, 130, 246, 0.08)',
+                        transition: 'all 0.3s ease',
+                        position: 'relative',
+                        borderLeft: '4px solid #3b82f6',
+                        animation: `fadeIn ${0.3 + index * 0.1}s ease-out`
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-4px)';
+                        e.currentTarget.style.boxShadow = '0 12px 24px rgba(59, 130, 246, 0.15)';
+                        e.currentTarget.style.borderLeftColor = '#1d4ed8';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.08)';
+                        e.currentTarget.style.borderLeftColor = '#3b82f6';
+                      }}>
+                        
+                        {/* Not Numarası Badge */}
+                        <div style={{
+                          position: 'absolute',
+                          top: -8,
+                          right: 16,
+                          background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+                          color: 'white',
+                          borderRadius: 12,
+                          padding: '4px 12px',
+                          fontSize: 12,
+                          fontWeight: 600,
+                          boxShadow: '0 2px 8px rgba(59, 130, 246, 0.3)'
+                        }}>
+                          #{patientNotes.length - index}
+                        </div>
+
+                        {/* Header */}
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          marginBottom: 16,
+                          paddingBottom: 12,
+                          borderBottom: '1px solid #f1f5f9'
+                        }}>
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 8
+                          }}>
+                            <div style={{
+                              width: 10,
+                              height: 10,
+                              borderRadius: '50%',
+                              background: '#22c55e'
+                            }}></div>
+                            <span style={{
+                              fontSize: 14,
+                              fontWeight: 600,
+                              color: '#374151'
+                            }}>
+                              {new Date(note.created_at).toLocaleDateString('tr-TR', {
+                                day: '2-digit',
+                                month: 'long',
+                                year: 'numeric'
+                              })}
+                            </span>
+                          </div>
+                          <span style={{
+                            fontSize: 12,
+                            color: '#64748b',
+                            fontFamily: 'monospace',
+                            background: '#f8fafc',
+                            padding: '2px 8px',
+                            borderRadius: 6
+                          }}>
+                            {new Date(note.created_at).toLocaleTimeString('tr-TR', {
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </span>
+                        </div>
+
+                        {/* Content */}
+                        <div style={{
+                          fontSize: 15,
+                          lineHeight: 1.6,
+                          color: '#374151',
+                          wordWrap: 'break-word',
+                          whiteSpace: 'pre-wrap',
+                          minHeight: 40
+                        }}>
+                          {note.note}
+                        </div>
+
+                        {/* Footer */}
+                        <div style={{
+                          marginTop: 16,
+                          paddingTop: 12,
+                          borderTop: '1px solid #f1f5f9',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'between',
+                          fontSize: 12,
+                          color: '#64748b'
+                        }}>
+                          <span>📅 Kayıt Tarihi</span>
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 6,
+                            marginLeft: 'auto'
+                          }}>
+                            <div style={{
+                              width: 6,
+                              height: 6,
+                              borderRadius: '50%',
+                              background: '#10b981'
+                            }}></div>
+                            <span>Kaydedildi</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Alt Bilgi */}
+                {patientNotes.length > 0 && (
+                  <div style={{
+                    marginTop: 24,
+                    padding: '16px 20px',
+                    background: 'rgba(59, 130, 246, 0.05)',
+                    borderRadius: 12,
+                    border: '1px solid rgba(59, 130, 246, 0.1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
+                    fontSize: 14,
+                    color: '#475569'
+                  }}>
+                    <span>💡</span>
+                    <span>Yeni not eklemek için yukarıdaki "Not Ekle" butonunu kullanabilirsiniz</span>
+                  </div>
+                )}
+              </div>
+            </div>
             {/* Mobile-only tweaks kaldırıldı, yukarıya taşındı */}
             {/* Randevu Geçmişi */}
             <div style={{ marginTop: 40, width: "100%" }}>
@@ -1463,6 +1586,8 @@ export default function PatientCardPageClient() {
                 )}
               </div>
             </div>
+
+        
           </>
         ) : null}
       </main>
