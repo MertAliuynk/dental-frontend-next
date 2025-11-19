@@ -530,16 +530,18 @@ export default function PatientCardPageClient() {
                   y -= 24;
                   // Kolon başlıkları (gri arka plan, koyu yazı)
                   page.drawRectangle({ x: 50, y: y-2, width: 490, height: 18, color: rgb(0.93,0.96,0.99), borderColor: rgb(0.8,0.85,0.95), borderWidth: 1 });
-                  // Kolon dikey çizgileri (5 kolon: 170, 300, 400, 470)
+                  // Kolon dikey çizgileri (6 kolon: 130, 210, 280, 350, 430)
                   page.drawLine({ start: { x: 130, y: y-2 }, end: { x: 130, y: y+16 }, color: rgb(0.7,0.8,0.9), thickness: 1 });
                   page.drawLine({ start: { x: 210, y: y-2 }, end: { x: 210, y: y+16 }, color: rgb(0.7,0.8,0.9), thickness: 1 });
-                  page.drawLine({ start: { x: 300, y: y-2 }, end: { x: 300, y: y+16 }, color: rgb(0.7,0.8,0.9), thickness: 1 });
-                  page.drawLine({ start: { x: 400, y: y-2 }, end: { x: 400, y: y+16 }, color: rgb(0.7,0.8,0.9), thickness: 1 });
-                  page.drawText(sanitizeText("Tedavi Adı"), { x: 60, y: y+2, size: 12, font, color: rgb(0.1,0.3,0.6) });
-                  page.drawText(sanitizeText("Diş No"), { x: 140, y: y+2, size: 12, font, color: rgb(0.1,0.3,0.6) });
-                  page.drawText(sanitizeText("Doktor"), { x: 220, y: y+2, size: 12, font, color: rgb(0.1,0.3,0.6) });
-                  page.drawText(sanitizeText("Durum"), { x: 310, y: y+2, size: 12, font, color: rgb(0.1,0.3,0.6) });
-                  page.drawText(sanitizeText("Tedavi Notu"), { x: 410, y: y+2, size: 12, font, color: rgb(0.1,0.3,0.6) });
+                  page.drawLine({ start: { x: 280, y: y-2 }, end: { x: 280, y: y+16 }, color: rgb(0.7,0.8,0.9), thickness: 1 });
+                  page.drawLine({ start: { x: 350, y: y-2 }, end: { x: 350, y: y+16 }, color: rgb(0.7,0.8,0.9), thickness: 1 });
+                  page.drawLine({ start: { x: 430, y: y-2 }, end: { x: 430, y: y+16 }, color: rgb(0.7,0.8,0.9), thickness: 1 });
+                  page.drawText(sanitizeText("Tedavi Adi"), { x: 60, y: y+2, size: 11, font, color: rgb(0.1,0.3,0.6) });
+                  page.drawText(sanitizeText("Dis No"), { x: 140, y: y+2, size: 11, font, color: rgb(0.1,0.3,0.6) });
+                  page.drawText(sanitizeText("Doktor"), { x: 220, y: y+2, size: 11, font, color: rgb(0.1,0.3,0.6) });
+                  page.drawText(sanitizeText("Durum"), { x: 290, y: y+2, size: 11, font, color: rgb(0.1,0.3,0.6) });
+                  page.drawText(sanitizeText("Tarih"), { x: 360, y: y+2, size: 11, font, color: rgb(0.1,0.3,0.6) });
+                  page.drawText(sanitizeText("Not"), { x: 440, y: y+2, size: 11, font, color: rgb(0.1,0.3,0.6) });
                   y -= 18;
                   // Satırlar
                   // Yardımcı: metni sütun genişliğine göre satırlara böl
@@ -567,13 +569,22 @@ export default function PatientCardPageClient() {
                     } else if (tr.doctor_name) {
                       doctorName = tr.doctor_name;
                     }
-                    // Sütunlara göre karakter sınırı: Tedavi Adı(22), Diş No(18), Doktor(18), Durum(12), Not(30)
+                    // Tarih fonksiyonu
+                    const getTreatmentDateForPDF = (tr: any) => {
+                      if (tr.completed_at) return new Date(tr.completed_at).toLocaleDateString('tr-TR');
+                      if (tr.approved_at) return new Date(tr.approved_at).toLocaleDateString('tr-TR');
+                      if (tr.suggested_at) return new Date(tr.suggested_at).toLocaleDateString('tr-TR');
+                      if (tr.created_at) return new Date(tr.created_at).toLocaleDateString('tr-TR');
+                      return "-";
+                    };
+                    // Sütunlara göre karakter sınırı: Tedavi Adı(18), Diş No(14), Doktor(14), Durum(12), Tarih(14), Not(20)
                     const columns = [
-                      splitText(tr.treatment_type_name || tr.name || "Tedavi", 22),
-                      splitText(Array.isArray(teeth) && teeth.length > 0 ? teeth.join(", ") : "-", 18),
-                      splitText(doctorName, 18),
+                      splitText(tr.treatment_type_name || tr.name || "Tedavi", 18),
+                      splitText(Array.isArray(teeth) && teeth.length > 0 ? teeth.join(", ") : "-", 14),
+                      splitText(doctorName, 14),
                       splitText(tr.status, 12),
-                      splitText(tr.notes || tr.note || "-", 30)
+                      splitText(getTreatmentDateForPDF(tr), 14),
+                      splitText(tr.notes || tr.note || "-", 20)
                     ];
                     // En fazla kaç satır var?
                     const maxRows = Math.max(...columns.map(col => col.length));
@@ -583,16 +594,18 @@ export default function PatientCardPageClient() {
                       // Dikey çizgiler
                       page.drawLine({ start: { x: 130, y: y-2 }, end: { x: 130, y: y+14 }, color: rgb(0.7,0.8,0.9), thickness: 1 });
                       page.drawLine({ start: { x: 210, y: y-2 }, end: { x: 210, y: y+14 }, color: rgb(0.7,0.8,0.9), thickness: 1 });
-                      page.drawLine({ start: { x: 300, y: y-2 }, end: { x: 300, y: y+14 }, color: rgb(0.7,0.8,0.9), thickness: 1 });
-                      page.drawLine({ start: { x: 400, y: y-2 }, end: { x: 400, y: y+14 }, color: rgb(0.7,0.8,0.9), thickness: 1 });
+                      page.drawLine({ start: { x: 280, y: y-2 }, end: { x: 280, y: y+14 }, color: rgb(0.7,0.8,0.9), thickness: 1 });
+                      page.drawLine({ start: { x: 350, y: y-2 }, end: { x: 350, y: y+14 }, color: rgb(0.7,0.8,0.9), thickness: 1 });
+                      page.drawLine({ start: { x: 430, y: y-2 }, end: { x: 430, y: y+14 }, color: rgb(0.7,0.8,0.9), thickness: 1 });
                       // Yatay çizgi (alt kenar)
                       page.drawLine({ start: { x: 50, y: y-2 }, end: { x: 540, y: y-2 }, color: rgb(0.7,0.8,0.9), thickness: 1 });
                       // Her hücreyi alt satıra yaz
                       page.drawText(columns[0][row] || "", { x: 60, y: y+2, size: 9, font, color: rgb(0,0,0) });
                       page.drawText(columns[1][row] || "", { x: 140, y: y+2, size: 9, font, color: rgb(0,0,0) });
                       page.drawText(columns[2][row] || "", { x: 220, y: y+2, size: 9, font, color: rgb(0,0,0) });
-                      page.drawText(columns[3][row] || "", { x: 310, y: y+2, size: 9, font, color: rgb(0,0,0) });
-                      page.drawText(columns[4][row] || "", { x: 410, y: y+2, size: 9, font, color: rgb(0,0,0) });
+                      page.drawText(columns[3][row] || "", { x: 290, y: y+2, size: 9, font, color: rgb(0,0,0) });
+                      page.drawText(columns[4][row] || "", { x: 360, y: y+2, size: 9, font, color: rgb(0,0,0) });
+                      page.drawText(columns[5][row] || "", { x: 440, y: y+2, size: 9, font, color: rgb(0,0,0) });
                       y -= 16;
                     }
                     y -= 2;
@@ -938,7 +951,14 @@ export default function PatientCardPageClient() {
               <div className="pc-lists" style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", flex: "3 1 600px" }}>
                 {/* Önerilen Tedaviler */}
                 <div className="pc-list-card" style={{ background: "#f8fafc", borderRadius: 24, border: "1.5px solid #b6c6e6", boxShadow: "0 2px 8px #e3eaff", padding: 24, minHeight: 340, display: "flex", flexDirection: "column", alignItems: "center" }}>
-                  <div className="pc-list-title" style={{ fontWeight: 700, fontSize: 16, color: "#0a2972", marginBottom: 8, borderBottom: "1px solid #dbeafe", width: "100%", textAlign: "center", borderTopLeftRadius: 18, borderTopRightRadius: 18 }}>Önerilen Tedaviler</div>
+                  <div className="pc-list-title" style={{ fontWeight: 700, fontSize: 16, color: "#0a2972", marginBottom: 8, borderBottom: "1px solid #dbeafe", width: "100%", textAlign: "center", borderTopLeftRadius: 18, borderTopRightRadius: 18 }}>
+                    Önerilen Tedaviler 
+                    {suggestedTreatments.length > 0 && (
+                      <span style={{ fontSize: 12, color: "#666", fontWeight: 400, display: "block", marginTop: 2 }}>
+                        📅 Son önerilen: {new Date(Math.max(...suggestedTreatments.map((t: any) => new Date(t.suggested_at || t.created_at).getTime()))).toLocaleDateString('tr-TR')}
+                      </span>
+                    )}
+                  </div>
                   <div className="pc-list-content" style={{ flex: 1, width: "100%", background: "#fffbea", borderRadius: 12, padding: 16, minHeight: 200, display: "flex", flexDirection: "column" }}>
                     {treatments.filter((x: any) => ['önerilen','onaylanan','tamamlanan'].includes(x.status)).length === 0 ? (
                       <div style={{ color: "#888", textAlign: "center", flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>Yok</div>
@@ -1001,28 +1021,45 @@ export default function PatientCardPageClient() {
                                   style={{ cursor: "pointer" }}
                                 />
                               )}
-                              <span>
-                                {treatmentName}
-                                {/* Doktor adı küçük ve belirgin şekilde */}
-                                {tr.doctor_name && (
-                                  <span style={{ color: '#1976d2', fontSize: 11, fontWeight: 500, marginLeft: 6 }}>
-                                    • {tr.doctor_name}
-                                  </span>
-                                )}
-                                {jawLabel && (
-                                  <span style={{ color: "#666", fontSize: 13 }}> {" "}({jawLabel}{Array.isArray(toothNumbers) && toothNumbers.length > 0 ? ` (${toothNumbers.join(", ")})` : ""})</span>
-                                )}
-                                {!jawLabel && tr.is_per_tooth && Array.isArray(toothNumbers) && toothNumbers.length > 0 && (
-                                  <span style={{ color: "#666", fontSize: 13 }}>
-                                    {" "}(Dişler: {toothNumbers.join(", ")})
-                                  </span>
-                                )}
-                                {tr.status !== 'önerilen' && (
-                                  <span style={{ marginLeft: 8, fontSize: 12, fontWeight: 600, color: tr.status === 'onaylanan' ? '#1976d2' : '#388e3c' }}>
-                                    [{tr.status === 'onaylanan' ? 'Onaylanan' : 'Tamamlanan'}]
-                                  </span>
-                                )}
-                              </span>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                <div>
+                                  {treatmentName}
+                                  {/* Doktor adı küçük ve belirgin şekilde */}
+                                  {tr.doctor_name && (
+                                    <span style={{ color: '#1976d2', fontSize: 11, fontWeight: 500, marginLeft: 6 }}>
+                                      • {tr.doctor_name}
+                                    </span>
+                                  )}
+                                  {jawLabel && (
+                                    <span style={{ color: "#666", fontSize: 13 }}> {" "}({jawLabel}{Array.isArray(toothNumbers) && toothNumbers.length > 0 ? ` (${toothNumbers.join(", ")})` : ""})</span>
+                                  )}
+                                  {!jawLabel && tr.is_per_tooth && Array.isArray(toothNumbers) && toothNumbers.length > 0 && (
+                                    <span style={{ color: "#666", fontSize: 13 }}>
+                                      {" "}(Dişler: {toothNumbers.join(", ")})
+                                    </span>
+                                  )}
+                                  {tr.status !== 'önerilen' && (
+                                    <span style={{ marginLeft: 8, fontSize: 12, fontWeight: 600, color: tr.status === 'onaylanan' ? '#1976d2' : '#388e3c' }}>
+                                      [{tr.status === 'onaylanan' ? 'Onaylanan' : 'Tamamlanan'}]
+                                    </span>
+                                  )}
+                                </div>
+                                {/* Tedavi tarihi bilgisi */}
+                                <div style={{ fontSize: 11, color: '#666', fontStyle: 'italic' }}>
+                                  {tr.status === 'önerilen' && tr.suggested_at && (
+                                    <>📅 Önerilme: {new Date(tr.suggested_at).toLocaleDateString('tr-TR')}</>
+                                  )}
+                                  {tr.status === 'onaylanan' && tr.approved_at && (
+                                    <>✅ Onaylanma: {new Date(tr.approved_at).toLocaleDateString('tr-TR')}</>
+                                  )}
+                                  {tr.status === 'tamamlanan' && tr.completed_at && (
+                                    <>🎉 Tamamlanma: {new Date(tr.completed_at).toLocaleDateString('tr-TR')}</>
+                                  )}
+                                  {!tr.suggested_at && !tr.approved_at && !tr.completed_at && tr.created_at && (
+                                    <>📅 Kayıt: {new Date(tr.created_at).toLocaleDateString('tr-TR')}</>
+                                  )}
+                                </div>
+                              </div>
                               {showTotals && (
                                 <span style={{ fontWeight: 700, color: '#0a2972' }}>
                                   ₺{getLineTotal(tr).toLocaleString('tr-TR')}
@@ -1083,7 +1120,14 @@ export default function PatientCardPageClient() {
                 </div>
                 {/* Onaylanan Tedaviler */}
                 <div className="pc-list-card animated-card" style={{ background: "linear-gradient(120deg, #fafdff 60%, #e3eaff 100%)", borderRadius: 24, border: "2px solid #1976d2", boxShadow: "0 8px 32px #0d1a4a22, 0 1.5px 0 #1976d2", padding: 28, minHeight: 340, display: "flex", flexDirection: "column", alignItems: "center", animation: 'fadeIn .5s cubic-bezier(.4,2,.6,1)' }}>
-                  <div className="pc-list-title" style={{ fontWeight: 900, fontSize: 18, color: "#1976d2", marginBottom: 12, borderBottom: "1.5px solid #e3eaff", width: "100%", textAlign: "center", borderTopLeftRadius: 18, borderTopRightRadius: 18, letterSpacing: 0.2, textShadow: "0 2px 8px #e3eaff77", paddingBottom: 6, background: 'linear-gradient(90deg, #e3eaff33 0%, #fafdff 100%)' }}>Onaylanan Tedaviler</div>
+                  <div className="pc-list-title" style={{ fontWeight: 900, fontSize: 18, color: "#1976d2", marginBottom: 12, borderBottom: "1.5px solid #e3eaff", width: "100%", textAlign: "center", borderTopLeftRadius: 18, borderTopRightRadius: 18, letterSpacing: 0.2, textShadow: "0 2px 8px #e3eaff77", paddingBottom: 6, background: 'linear-gradient(90deg, #e3eaff33 0%, #fafdff 100%)' }}>
+                    Onaylanan Tedaviler
+                    {approvedTreatments.length > 0 && (
+                      <span style={{ fontSize: 12, color: "#666", fontWeight: 400, display: "block", marginTop: 2 }}>
+                        ✅ Son onaylanan: {new Date(Math.max(...approvedTreatments.map((t: any) => new Date(t.approved_at || t.created_at).getTime()))).toLocaleDateString('tr-TR')}
+                      </span>
+                    )}
+                  </div>
                   <div className="pc-list-content" style={{ flex: 1, width: "100%", background: "#fffbea", borderRadius: 14, padding: 18, minHeight: 200, display: "flex", flexDirection: "column", boxShadow: '0 2px 8px #e3eaff33', animation: 'fadeIn .6s' }}>
                     {treatments.filter((x: any) => ['onaylanan','tamamlanan'].includes(x.status)).length === 0 ? (
                       <div style={{ color: "#888", textAlign: "center", flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>Yok</div>
@@ -1144,28 +1188,45 @@ export default function PatientCardPageClient() {
                                   style={{ cursor: "pointer" }}
                                 />
                               )}
-                              <span>
-                                {treatmentName}
-                                {/* Doktor adı küçük ve belirgin şekilde */}
-                                {tr.doctor_name && (
-                                  <span style={{ color: '#1976d2', fontSize: 11, fontWeight: 500, marginLeft: 6 }}>
-                                    • {tr.doctor_name}
-                                  </span>
-                                )}
-                                {jawLabel && (
-                                  <span style={{ color: "#666", fontSize: 13 }}> {" "}({jawLabel}{Array.isArray(toothNumbers) && toothNumbers.length > 0 ? ` (${toothNumbers.join(", ")})` : ""})</span>
-                                )}
-                                {!jawLabel && tr.is_per_tooth && Array.isArray(toothNumbers) && toothNumbers.length > 0 && (
-                                  <span style={{ color: "#666", fontSize: 13 }}>
-                                    {" "}(Dişler: {toothNumbers.join(", ")})
-                                  </span>
-                                )}
-                                {tr.status === 'tamamlanan' && (
-                                  <span style={{ marginLeft: 8, fontSize: 12, fontWeight: 600, color: '#388e3c' }}>
-                                    [Tamamlanan]
-                                  </span>
-                                )}
-                              </span>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                <div>
+                                  {treatmentName}
+                                  {/* Doktor adı küçük ve belirgin şekilde */}
+                                  {tr.doctor_name && (
+                                    <span style={{ color: '#1976d2', fontSize: 11, fontWeight: 500, marginLeft: 6 }}>
+                                      • {tr.doctor_name}
+                                    </span>
+                                  )}
+                                  {jawLabel && (
+                                    <span style={{ color: "#666", fontSize: 13 }}> {" "}({jawLabel}{Array.isArray(toothNumbers) && toothNumbers.length > 0 ? ` (${toothNumbers.join(", ")})` : ""})</span>
+                                  )}
+                                  {!jawLabel && tr.is_per_tooth && Array.isArray(toothNumbers) && toothNumbers.length > 0 && (
+                                    <span style={{ color: "#666", fontSize: 13 }}>
+                                      {" "}(Dişler: {toothNumbers.join(", ")})
+                                    </span>
+                                  )}
+                                  {tr.status === 'tamamlanan' && (
+                                    <span style={{ marginLeft: 8, fontSize: 12, fontWeight: 600, color: '#388e3c' }}>
+                                      [Tamamlanan]
+                                    </span>
+                                  )}
+                                </div>
+                                {/* Tedavi tarihi bilgisi */}
+                                <div style={{ fontSize: 11, color: '#666', fontStyle: 'italic' }}>
+                                  {tr.status === 'onaylanan' && tr.approved_at && (
+                                    <>✅ Onaylanma: {new Date(tr.approved_at).toLocaleDateString('tr-TR')}</>
+                                  )}
+                                  {tr.status === 'tamamlanan' && tr.completed_at && (
+                                    <>🎉 Tamamlanma: {new Date(tr.completed_at).toLocaleDateString('tr-TR')}</>
+                                  )}
+                                  {!tr.approved_at && !tr.completed_at && tr.suggested_at && (
+                                    <>📅 Önerilme: {new Date(tr.suggested_at).toLocaleDateString('tr-TR')}</>
+                                  )}
+                                  {!tr.suggested_at && !tr.approved_at && !tr.completed_at && tr.created_at && (
+                                    <>📅 Kayıt: {new Date(tr.created_at).toLocaleDateString('tr-TR')}</>
+                                  )}
+                                </div>
+                              </div>
                               {showTotals && (
                                 <span style={{ fontWeight: 700, color: '#0a2972' }}>
                                   ₺{getLineTotal(tr).toLocaleString('tr-TR')}
@@ -1221,7 +1282,14 @@ export default function PatientCardPageClient() {
                 </div>
                 {/* Tamamlanan Tedaviler */}
                 <div className="pc-list-card animated-card" style={{ background: "linear-gradient(120deg, #fafdff 60%, #e3eaff 100%)", borderRadius: 24, border: "2px solid #388e3c", boxShadow: "0 8px 32px #0d1a4a22, 0 1.5px 0 #388e3c", padding: 28, minHeight: 340, display: "flex", flexDirection: "column", alignItems: "center", animation: 'fadeIn .5s cubic-bezier(.4,2,.6,1)' }}>
-                  <div className="pc-list-title" style={{ fontWeight: 900, fontSize: 18, color: "#388e3c", marginBottom: 12, borderBottom: "1.5px solid #e3eaff", width: "100%", textAlign: "center", borderTopLeftRadius: 18, borderTopRightRadius: 18, letterSpacing: 0.2, textShadow: "0 2px 8px #e3eaff77", paddingBottom: 6, background: 'linear-gradient(90deg, #e3eaff33 0%, #fafdff 100%)' }}>Biten Tedaviler</div>
+                  <div className="pc-list-title" style={{ fontWeight: 900, fontSize: 18, color: "#388e3c", marginBottom: 12, borderBottom: "1.5px solid #e3eaff", width: "100%", textAlign: "center", borderTopLeftRadius: 18, borderTopRightRadius: 18, letterSpacing: 0.2, textShadow: "0 2px 8px #e3eaff77", paddingBottom: 6, background: 'linear-gradient(90deg, #e3eaff33 0%, #fafdff 100%)' }}>
+                    Biten Tedaviler
+                    {completedTreatments.length > 0 && (
+                      <span style={{ fontSize: 12, color: "#666", fontWeight: 400, display: "block", marginTop: 2 }}>
+                        🎉 Son tamamlanan: {new Date(Math.max(...completedTreatments.map((t: any) => new Date(t.completed_at || t.created_at).getTime()))).toLocaleDateString('tr-TR')}
+                      </span>
+                    )}
+                  </div>
                   <div className="pc-list-content" style={{ flex: 1, width: "100%", background: "#fffbea", borderRadius: 14, padding: 18, minHeight: 240, boxShadow: '0 2px 8px #e3eaff33', animation: 'fadeIn .6s' }}>
                     {completedTreatments.length === 0 ? (
                       <div style={{ color: "#888", textAlign: "center" }}>Yok</div>
@@ -1260,15 +1328,32 @@ export default function PatientCardPageClient() {
                                 onChange={e => { e.stopPropagation(); toggleCompletedTreatmentSelection(tr.treatment_id); }}
                                 style={{ cursor: "pointer" }}
                               />
-                              <span>
-                                {treatmentName}
-                                {tr.doctor_name && (
-                                  <span style={{ color: '#1976d2', fontSize: 12, fontWeight: 700, marginLeft: 6 }}>• {tr.doctor_name}</span>
-                                )}
-                                {Array.isArray(toothNumbers) && toothNumbers.length > 0 && (
-                                  <span style={{ color: "#666", fontSize: 13 }}> (Dişler: {toothNumbers.join(", ")})</span>
-                                )}
-                              </span>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                <div>
+                                  {treatmentName}
+                                  {tr.doctor_name && (
+                                    <span style={{ color: '#1976d2', fontSize: 12, fontWeight: 700, marginLeft: 6 }}>• {tr.doctor_name}</span>
+                                  )}
+                                  {Array.isArray(toothNumbers) && toothNumbers.length > 0 && (
+                                    <span style={{ color: "#666", fontSize: 13 }}> (Dişler: {toothNumbers.join(", ")})</span>
+                                  )}
+                                </div>
+                                {/* Tedavi tarihi bilgisi */}
+                                <div style={{ fontSize: 11, color: '#666', fontStyle: 'italic' }}>
+                                  {tr.completed_at && (
+                                    <>🎉 Tamamlanma: {new Date(tr.completed_at).toLocaleDateString('tr-TR')}</>
+                                  )}
+                                  {!tr.completed_at && tr.approved_at && (
+                                    <>✅ Onaylanma: {new Date(tr.approved_at).toLocaleDateString('tr-TR')}</>
+                                  )}
+                                  {!tr.completed_at && !tr.approved_at && tr.suggested_at && (
+                                    <>📅 Önerilme: {new Date(tr.suggested_at).toLocaleDateString('tr-TR')}</>
+                                  )}
+                                  {!tr.completed_at && !tr.approved_at && !tr.suggested_at && tr.created_at && (
+                                    <>📅 Kayıt: {new Date(tr.created_at).toLocaleDateString('tr-TR')}</>
+                                  )}
+                                </div>
+                              </div>
                             </div>
                           );
                         })}
