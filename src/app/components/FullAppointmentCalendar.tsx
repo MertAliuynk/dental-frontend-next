@@ -1126,6 +1126,13 @@ export default function FullAppointmentCalendar() {
                     ? `${summaryData.event.created_by_first_name || ''} ${summaryData.event.created_by_last_name || ''}`.trim()
                     : 'Bilinmiyor'}
                 </span>
+              {/* Randevu oluşturulma tarihi */}
+              <div style={{ fontWeight: 700, color: '#444', marginTop: 2 }}>
+                <span>Oluşturma Tarihi: </span>
+                <span style={{ fontWeight: 800 }}>
+                  {summaryData.event?.created_at ? new Date(summaryData.event.created_at).toLocaleString('tr-TR') : 'Bilinmiyor'}
+                </span>
+              </div>
               </div>
             </div>
 
