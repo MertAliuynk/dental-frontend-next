@@ -861,222 +861,317 @@ export default function FullAppointmentCalendar() {
       {/* Create Modal */}
       {showCreate && (
   <div style={{ position: 'fixed', inset: 0 as any, zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.35)' }}>
-          <div style={{ background: '#fff', borderRadius: 12, padding: 20, width: '96%', maxWidth: 460, maxHeight: '90vh', overflowY: 'auto', boxSizing: 'border-box' }}>
-            <div style={{ fontWeight: 900, fontSize: 20, marginBottom: 12, color: '#1f3755', letterSpacing: '0.5px' }}>Randevu Oluştur</div>
-            {role !== 'doctor' && (
-              <div style={{ marginBottom: 10 }}>
-                <div style={{ fontWeight: 700, marginBottom: 6 }}>Doktor</div>
-        <select value={createForm.doctorId} onChange={(e) => setCreateForm(f => ({ ...f, doctorId: e.target.value }))} style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #d1d5db', color: '#0f172a', fontWeight: 700 }}>
-                  <option value="">Seçiniz</option>
-                  {doctors.map((d: any) => (
-                    <option key={d.user_id} value={String(d.user_id)}>{d.first_name} {d.last_name}</option>
-                  ))}
-                </select>
-              </div>
-            )}
-            {!createForm.saatKapa && (
-              <div style={{ marginBottom: 10 }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <span style={{ fontWeight: 900, color: '#0f172a', letterSpacing: '0.5px' }}>Hasta</span>
-                  <button
-                    type="button"
-                    onClick={() => setShowAddPatient(true)}
-                    style={{ background: '#22c55e', color: '#fff', border: 0, borderRadius: 8, padding: '4px 12px', fontWeight: 700, fontSize: 14, cursor: 'pointer', marginLeft: 8 }}
-                  >+ Hasta Ekle</button>
-                </div>
-                {/* Şube seçici */}
+    <div style={{ background: '#fff', borderRadius: 12, padding: 20, width: '96%', maxWidth: 460, maxHeight: '90vh', overflowY: 'auto', boxSizing: 'border-box' }}>
+      <div style={{ fontWeight: 900, fontSize: 20, marginBottom: 12, color: '#1f3755', letterSpacing: '0.5px' }}>Randevu Oluştur</div>
 
-                <input
-                  value={createForm.patientSearch}
-                  onChange={(e) => { const q = e.target.value; setCreateForm(f => ({ ...f, patientSearch: q })); searchPatients(q, 0); }}
-                  placeholder="İsim/TC/Telefon ile ara"
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #d1d5db', color: '#0f172a', fontWeight: 700 }}
-                />
-                {createForm.patientList.length > 0 && (
-                  <div style={{ maxHeight: 180, overflow: 'auto', border: '1px solid #e5e7eb', borderRadius: 8, marginTop: 6 }}>
-                    {createForm.patientList.map((p: any) => (
-                      <div key={p.patient_id} onClick={() => setCreateForm(f => ({ ...f, patientId: String(p.patient_id), patientSearch: `${p.first_name} ${p.last_name} - ${p.phone}` , selectedPatient: p, patientList: [] }))} style={{ padding: '8px 10px', cursor: 'pointer' }}>
-                        <div style={{ fontWeight: 800, color: '#0f172a' }}>{p.first_name} {p.last_name} <span style={{ fontWeight: 600, color: '#1976d2', fontSize: 12, marginLeft: 6 }}>{p.branch_name ? `(${p.branch_name})` : ''}</span></div>
-                        <div style={{ fontSize: 12, color: '#0f172a' }}>{p.phone} {p.tc_number ? ` • ${p.tc_number}` : ''}</div>
-                      </div>
-                    ))}
-                    <div style={{ padding: 8, borderTop: '1px solid #e5e7eb', display: 'flex', justifyContent: 'center' }}>
-                      <button onClick={() => searchPatients(createForm.patientSearch, createForm.patientOffset + 20)} style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #cbd5e1', background: '#fff' }}>Daha fazla</button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-            {!createForm.saatKapa && (
-              <div style={{ marginBottom: 10 }}>
-                <div style={{ fontWeight: 900, marginBottom: 6, color: '#0f172a', letterSpacing: '0.5px' }}>Randevu Türü</div>
-                {/* Custom dropdown for appointment type */}
-                <div style={{ position: 'relative', marginBottom: 8 }}>
-                  <div
-                    style={{
-                      width: '100%',
-                      padding: '10px 12px',
-                      borderRadius: 8,
-                      border: '1px solid #d1d5db',
-                      color: '#0f172a',
-                      fontWeight: 700,
-                      background: '#fff',
-                      cursor: 'pointer',
-                      userSelect: 'none',
-                    }}
-                    onClick={() => setCreateForm(f => ({ ...f, showTypeDropdown: !f.showTypeDropdown }))}
-                  >
-                    {createForm.appointmentType || 'Tür seçiniz'}
-                    <span style={{ float: 'right', fontWeight: 400 }}>&#9660;</span>
-                  </div>
-                  {createForm.showTypeDropdown && (
-                    <div
-                      style={{
-                        position: 'absolute',
-                        top: '100%',
-                        left: 0,
-                        width: '100%',
-                        background: '#fff',
-                        border: '1px solid #d1d5db',
-                        borderRadius: 8,
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-                        maxHeight: 260,
-                        overflowY: 'auto',
-                        zIndex: 100,
-                      }}
-                    >
-                      <div style={{ padding: '8px 12px', borderBottom: '1px solid #e5e7eb', background: '#f3f4f6' }}>
-                        <input
-                          type="text"
-                          value={createForm.appointmentTypeSearch}
-                          onChange={e => setCreateForm(f => ({ ...f, appointmentTypeSearch: e.target.value }))}
-                          placeholder="Tür ara..."
-                          style={{ width: '100%', padding: '8px', borderRadius: 6, border: '1px solid #d1d5db', fontWeight: 700, color: '#0f172a' }}
-                        />
-                      </div>
-                      <div
-                        style={{
-                          padding: '10px 12px',
-                          color: '#64748b',
-                          fontWeight: 700,
-                          cursor: 'pointer',
-                          borderBottom: '1px solid #e5e7eb',
-                        }}
-                        onClick={() => setCreateForm(f => ({ ...f, appointmentType: '', showTypeDropdown: false, appointmentTypeSearch: '' }))}
-                      >Tür seçiniz</div>
-                      {appointmentTypes
-                        .filter(type => type.toLowerCase().includes((createForm.appointmentTypeSearch || '').toLowerCase()))
-                        .map(type => (
-                          <div
-                            key={type}
-                            style={{
-                              padding: '10px 12px',
-                              color: '#0f172a',
-                              fontWeight: 700,
-                              cursor: 'pointer',
-                              borderBottom: '1px solid #e5e7eb',
-                              background: createForm.appointmentType === type ? '#e0e7ef' : '#fff',
-                            }}
-                            onClick={() => setCreateForm(f => ({ ...f, appointmentType: type, showTypeDropdown: false, appointmentTypeSearch: '' }))}
-                          >{type}</div>
-                        ))}
-                    </div>
-                  )}
-                </div>
-                <div style={{ fontWeight: 900, marginBottom: 6, color: '#0f172a', letterSpacing: '0.5px' }}>Not</div>
-                <input value={createForm.notes} onChange={(e) => setCreateForm(f => ({ ...f, notes: e.target.value }))} style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #d1d5db', color: '#0f172a', fontWeight: 700 }} />
-              </div>
-            )}
-            <div style={{ marginBottom: 10 }}>
-              <div style={{ fontWeight: 900, marginBottom: 6, color: '#0f172a', letterSpacing: '0.5px' }}>Süre</div>
-              <select
-                value={createForm.duration}
-                onChange={(e) => setCreateForm(f => ({ ...f, duration: Number(e.target.value) }))}
-                style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #d1d5db', color: '#0f172a', fontWeight: 700 }}
-              >
-                {[15,30,45,60,75,90,105,120].map(min => (
-                  <option key={min} value={min}>{min} dk</option>
-                ))}
-              </select>
-              {/* Saat Kapa seçeneği */}
-              <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <input
-                  type="checkbox"
-                  id="saatkapa"
-                  style={{ width: 18, height: 18 }}
-                  checked={!!createForm.saatKapa}
-                  onChange={e => setCreateForm(f => ({ ...f, saatKapa: e.target.checked }))}
-                />
-                <label htmlFor="saatkapa" style={{ fontWeight: 700, color: '#1976d2', cursor: 'pointer', userSelect: 'none', fontSize: 15 }}>Saat Kapa</label>
-              </div>
-            </div>
-            {/* SMS Preview & Send */}
-            {!createForm.saatKapa && (
-              <div style={{ borderTop: '1px solid #e5e7eb', marginTop: 10, paddingTop: 10 }}>
-                <div style={{ fontWeight: 800, marginBottom: 6, color: '#0f172a' }}>SMS Önizleme</div>
-                <div style={{ border: '1px solid #e5e7eb', borderRadius: 8, padding: 10, background: '#f9fafb', color: '#0f172a', marginBottom: 8 }}>
-                  {(() => {
-                    const p = createForm.selectedPatient;
-                    const name = p ? `${p.first_name || ''} ${p.last_name || ''}`.trim() : (createForm.patientSearch.split(' - ')[0] || 'Hasta');
-                    const d = createForm.when ? createForm.when.toLocaleDateString('tr-TR') : 'gün';
-                    const t = createForm.when ? createForm.when.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', hour12: false }) : 'saat';
-                    const bn = branchName || 'şube';
-                    return `Sayın ${name}, Karadeniz Ağız ve Diş Sağlığı Poliklinikleri tarafından ${bn} şubesine ${d} ${t} saatinde randevunuz oluşturulmuştur.`;
-                  })()}
-                </div>
-                <button
-                  onClick={async () => {
-                    try {
-                      if (!createForm.patientId) { alert('Lütfen hasta seçin'); return; }
-                      if (!createForm.when) { alert('Lütfen tarih/saat seçin'); return; }
-                      let patient = createForm.selectedPatient;
-                      if (!patient) {
-                        const resP = await fetch(`https://dentalapi.karadenizdis.com/api/patient/${createForm.patientId}`);
-                        const dataP = await resP.json();
-                        if (dataP?.success) patient = dataP.data;
-                      }
-                      const phone = patient?.phone;
-                      const name = patient ? `${patient.first_name || ''} ${patient.last_name || ''}`.trim() : (createForm.patientSearch.split(' - ')[0] || 'Hasta');
-                      if (!phone) { alert('Hastanın telefon numarası bulunamadı'); return; }
-                      const d = createForm.when.toLocaleDateString('tr-TR');
-                      const t = createForm.when.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', hour12: false });
-                      const bn = branchName || 'şube';
-                      const message = `Sayın ${name}, Karadeniz Ağız ve Diş Sağlığı Poliklinikleri tarafından ${bn} şubesine ${d} ${t} saatinde randevunuz oluşturulmuştur.`;
-                      // Quick SMS ile aynı endpoint ve payload yapısı
-                      const token = localStorage.getItem("token");
-                      const response = await fetch("/api/sms/send", {
-                        method: "POST",
-                        headers: {
-                          "Content-Type": "application/json",
-                          Authorization: `Bearer ${token}`
-                        },
-                        body: JSON.stringify({
-                          patientIds: [createForm.patientId],
-                          templateId: null, // manuel mesaj için null
-                          customMessage: message,
-                          phone: phone
-                        })
-                      });
-                      const data = await response.json();
-                      if (response.ok && data?.success) alert('SMS gönderildi'); else alert(data?.message || 'SMS gönderilemedi');
-                    } catch (e) { alert('SMS gönderiminde hata'); }
-                  }}
-                  style={{ padding: '10px 16px', borderRadius: 8, border: '1px solid #16a34a', background: '#22c55e', color: '#fff', fontWeight: 700 }}
-                >
-                  SMS Gönder
-                </button>
-              </div>
-            )}
-
-            <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
-              <button onClick={() => setShowCreate(false)} style={{ padding: '10px 16px', borderRadius: 8, border: '2px solid #dc2626', background: '#ef4444', color: '#fff', fontWeight: 900, letterSpacing: '0.5px', boxShadow: '0 2px 8px rgba(220,38,38,0.08)' }}>İptal</button>
-              <button onClick={() => {
-                createAppointment();
-              }} style={{ padding: '10px 16px', borderRadius: 8, border: '2px solid #3174ad', background: '#3174ad', color: '#fff', fontWeight: 900, letterSpacing: '0.5px', boxShadow: '0 2px 8px rgba(49,116,173,0.08)' }}>Oluştur</button>
-            </div>
-          </div>
+      {role !== 'doctor' && (
+        <div style={{ marginBottom: 10 }}>
+          <div style={{ fontWeight: 700, marginBottom: 6 }}>Doktor</div>
+          <select
+            value={createForm.doctorId}
+            onChange={(e) => setCreateForm(f => ({ ...f, doctorId: e.target.value }))}
+            style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #d1d5db', color: '#0f172a', fontWeight: 700 }}
+          >
+            <option value="">Seçiniz</option>
+            {doctors.map((d: any) => (
+              <option key={d.user_id} value={String(d.user_id)}>
+                {d.first_name} {d.last_name}
+              </option>
+            ))}
+          </select>
         </div>
       )}
+
+      {!createForm.saatKapa && (
+        <div style={{ marginBottom: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+            <span style={{ fontWeight: 900, color: '#0f172a', letterSpacing: '0.5px' }}>Hasta</span>
+            <button
+              type="button"
+              onClick={() => setShowAddPatient(true)}
+              style={{ background: '#22c55e', color: '#fff', border: 0, borderRadius: 8, padding: '4px 12px', fontWeight: 700, fontSize: 14, cursor: 'pointer', marginLeft: 8 }}
+            >
+              + Hasta Ekle
+            </button>
+          </div>
+
+          {/* Şube seçici - Yeni eklenen kısım */}
+          <div style={{ marginBottom: 8 }}>
+            {branches.length === 0 ? (
+              <div style={{ color: '#888', fontSize: 13, padding: '10px 12px', background: '#f9fafb', borderRadius: 8, border: '1px solid #e5e7eb' }}>
+                Şubeler yükleniyor...
+              </div>
+            ) : (
+              <select
+                value={createForm.selectedBranchId || ''}
+                onChange={(e) => {
+                  const newBranch = e.target.value;
+                  setCreateForm(f => ({ ...f, selectedBranchId: newBranch }));
+                  // Şube değiştiğinde mevcut arama ile hemen yenile
+                  searchPatients(createForm.patientSearch.trim(), 0);
+                }}
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  borderRadius: 8,
+                  border: '1px solid #d1d5db',
+                  background: '#fff',
+                  color: '#0f172a',
+                  fontWeight: 700,
+                  fontSize: 15,
+                }}
+              >
+                <option value="">Tüm Şubeler</option>
+                {branches.map((b: any) => (
+                  <option key={b.branch_id} value={String(b.branch_id)}>
+                    {b.name}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+
+          <input
+            value={createForm.patientSearch}
+            onChange={(e) => {
+              const q = e.target.value;
+              setCreateForm(f => ({ ...f, patientSearch: q }));
+              searchPatients(q, 0);
+            }}
+            placeholder="İsim/TC/Telefon ile ara"
+            style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #d1d5db', color: '#0f172a', fontWeight: 700 }}
+          />
+
+          {createForm.patientList.length > 0 && (
+            <div style={{ maxHeight: 180, overflow: 'auto', border: '1px solid #e5e7eb', borderRadius: 8, marginTop: 6 }}>
+              {createForm.patientList.map((p: any) => (
+                <div
+                  key={p.patient_id}
+                  onClick={() => setCreateForm(f => ({
+                    ...f,
+                    patientId: String(p.patient_id),
+                    patientSearch: `${p.first_name} ${p.last_name} - ${p.phone}`,
+                    selectedPatient: p,
+                    patientList: [],
+                  }))}
+                  style={{ padding: '8px 10px', cursor: 'pointer' }}
+                >
+                  <div style={{ fontWeight: 800, color: '#0f172a' }}>
+                    {p.first_name} {p.last_name}
+                    <span style={{ fontWeight: 600, color: '#1976d2', fontSize: 12, marginLeft: 6 }}>
+                      {p.branch_name ? `(${p.branch_name})` : ''}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 12, color: '#0f172a' }}>
+                    {p.phone} {p.tc_number ? ` • ${p.tc_number}` : ''}
+                  </div>
+                </div>
+              ))}
+              <div style={{ padding: 8, borderTop: '1px solid #e5e7eb', display: 'flex', justifyContent: 'center' }}>
+                <button
+                  onClick={() => searchPatients(createForm.patientSearch, createForm.patientOffset + 20)}
+                  style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #cbd5e1', background: '#fff' }}
+                >
+                  Daha fazla
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {!createForm.saatKapa && (
+        <div style={{ marginBottom: 10 }}>
+          <div style={{ fontWeight: 900, marginBottom: 6, color: '#0f172a', letterSpacing: '0.5px' }}>Randevu Türü</div>
+          {/* Custom dropdown for appointment type */}
+          <div style={{ position: 'relative', marginBottom: 8 }}>
+            <div
+              style={{
+                width: '100%',
+                padding: '10px 12px',
+                borderRadius: 8,
+                border: '1px solid #d1d5db',
+                color: '#0f172a',
+                fontWeight: 700,
+                background: '#fff',
+                cursor: 'pointer',
+                userSelect: 'none',
+              }}
+              onClick={() => setCreateForm(f => ({ ...f, showTypeDropdown: !f.showTypeDropdown }))}
+            >
+              {createForm.appointmentType || 'Tür seçiniz'}
+              <span style={{ float: 'right', fontWeight: 400 }}>▼</span>
+            </div>
+            {createForm.showTypeDropdown && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  width: '100%',
+                  background: '#fff',
+                  border: '1px solid #d1d5db',
+                  borderRadius: 8,
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                  maxHeight: 260,
+                  overflowY: 'auto',
+                  zIndex: 100,
+                }}
+              >
+                <div style={{ padding: '8px 12px', borderBottom: '1px solid #e5e7eb', background: '#f3f4f6' }}>
+                  <input
+                    type="text"
+                    value={createForm.appointmentTypeSearch}
+                    onChange={e => setCreateForm(f => ({ ...f, appointmentTypeSearch: e.target.value }))}
+                    placeholder="Tür ara..."
+                    style={{ width: '100%', padding: '8px', borderRadius: 6, border: '1px solid #d1d5db', fontWeight: 700, color: '#0f172a' }}
+                  />
+                </div>
+                <div
+                  style={{
+                    padding: '10px 12px',
+                    color: '#64748b',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    borderBottom: '1px solid #e5e7eb',
+                  }}
+                  onClick={() => setCreateForm(f => ({ ...f, appointmentType: '', showTypeDropdown: false, appointmentTypeSearch: '' }))}
+                >
+                  Tür seçiniz
+                </div>
+                {appointmentTypes
+                  .filter(type => type.toLowerCase().includes((createForm.appointmentTypeSearch || '').toLowerCase()))
+                  .map(type => (
+                    <div
+                      key={type}
+                      style={{
+                        padding: '10px 12px',
+                        color: '#0f172a',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        borderBottom: '1px solid #e5e7eb',
+                        background: createForm.appointmentType === type ? '#e0e7ef' : '#fff',
+                      }}
+                      onClick={() => setCreateForm(f => ({ ...f, appointmentType: type, showTypeDropdown: false, appointmentTypeSearch: '' }))}
+                    >
+                      {type}
+                    </div>
+                  ))}
+              </div>
+            )}
+          </div>
+          <div style={{ fontWeight: 900, marginBottom: 6, color: '#0f172a', letterSpacing: '0.5px' }}>Not</div>
+          <input
+            value={createForm.notes}
+            onChange={(e) => setCreateForm(f => ({ ...f, notes: e.target.value }))}
+            style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #d1d5db', color: '#0f172a', fontWeight: 700 }}
+          />
+        </div>
+      )}
+
+      <div style={{ marginBottom: 10 }}>
+        <div style={{ fontWeight: 900, marginBottom: 6, color: '#0f172a', letterSpacing: '0.5px' }}>Süre</div>
+        <select
+          value={createForm.duration}
+          onChange={(e) => setCreateForm(f => ({ ...f, duration: Number(e.target.value) }))}
+          style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #d1d5db', color: '#0f172a', fontWeight: 700 }}
+        >
+          {[15,30,45,60,75,90,105,120].map(min => (
+            <option key={min} value={min}>{min} dk</option>
+          ))}
+        </select>
+        {/* Saat Kapa seçeneği */}
+        <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <input
+            type="checkbox"
+            id="saatkapa"
+            style={{ width: 18, height: 18 }}
+            checked={!!createForm.saatKapa}
+            onChange={e => setCreateForm(f => ({ ...f, saatKapa: e.target.checked }))}
+          />
+          <label htmlFor="saatkapa" style={{ fontWeight: 700, color: '#1976d2', cursor: 'pointer', userSelect: 'none', fontSize: 15 }}>
+            Saat Kapa
+          </label>
+        </div>
+      </div>
+
+      {/* SMS Preview & Send */}
+      {!createForm.saatKapa && (
+        <div style={{ borderTop: '1px solid #e5e7eb', marginTop: 10, paddingTop: 10 }}>
+          <div style={{ fontWeight: 800, marginBottom: 6, color: '#0f172a' }}>SMS Önizleme</div>
+          <div style={{ border: '1px solid #e5e7eb', borderRadius: 8, padding: 10, background: '#f9fafb', color: '#0f172a', marginBottom: 8 }}>
+            {(() => {
+              const p = createForm.selectedPatient;
+              const name = p ? `${p.first_name || ''} ${p.last_name || ''}`.trim() : (createForm.patientSearch.split(' - ')[0] || 'Hasta');
+              const d = createForm.when ? createForm.when.toLocaleDateString('tr-TR') : 'gün';
+              const t = createForm.when ? createForm.when.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', hour12: false }) : 'saat';
+              const bn = branchName || 'şube';
+              return `Sayın ${name}, Karadeniz Ağız ve Diş Sağlığı Poliklinikleri tarafından ${bn} şubesine ${d} ${t} saatinde randevunuz oluşturulmuştur.`;
+            })()}
+          </div>
+          <button
+            onClick={async () => {
+              try {
+                if (!createForm.patientId) { alert('Lütfen hasta seçin'); return; }
+                if (!createForm.when) { alert('Lütfen tarih/saat seçin'); return; }
+                let patient = createForm.selectedPatient;
+                if (!patient) {
+                  const resP = await fetch(`https://dentalapi.karadenizdis.com/api/patient/${createForm.patientId}`);
+                  const dataP = await resP.json();
+                  if (dataP?.success) patient = dataP.data;
+                }
+                const phone = patient?.phone;
+                const name = patient ? `${patient.first_name || ''} ${patient.last_name || ''}`.trim() : (createForm.patientSearch.split(' - ')[0] || 'Hasta');
+                if (!phone) { alert('Hastanın telefon numarası bulunamadı'); return; }
+                const d = createForm.when.toLocaleDateString('tr-TR');
+                const t = createForm.when.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', hour12: false });
+                const bn = branchName || 'şube';
+                const message = `Sayın ${name}, Karadeniz Ağız ve Diş Sağlığı Poliklinikleri tarafından ${bn} şubesine ${d} ${t} saatinde randevunuz oluşturulmuştur.`;
+                const token = localStorage.getItem("token");
+                const response = await fetch("/api/sms/send", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                  },
+                  body: JSON.stringify({
+                    patientIds: [createForm.patientId],
+                    templateId: null,
+                    customMessage: message,
+                    phone: phone
+                  })
+                });
+                const data = await response.json();
+                if (response.ok && data?.success) alert('SMS gönderildi');
+                else alert(data?.message || 'SMS gönderilemedi');
+              } catch (e) {
+                alert('SMS gönderiminde hata');
+              }
+            }}
+            style={{ padding: '10px 16px', borderRadius: 8, border: '1px solid #16a34a', background: '#22c55e', color: '#fff', fontWeight: 700 }}
+          >
+            SMS Gönder
+          </button>
+        </div>
+      )}
+
+      <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
+        <button
+          onClick={() => setShowCreate(false)}
+          style={{ padding: '10px 16px', borderRadius: 8, border: '2px solid #dc2626', background: '#ef4444', color: '#fff', fontWeight: 900, letterSpacing: '0.5px', boxShadow: '0 2px 8px rgba(220,38,38,0.08)' }}
+        >
+          İptal
+        </button>
+        <button
+          onClick={() => createAppointment()}
+          style={{ padding: '10px 16px', borderRadius: 8, border: '2px solid #3174ad', background: '#3174ad', color: '#fff', fontWeight: 900, letterSpacing: '0.5px', boxShadow: '0 2px 8px rgba(49,116,173,0.08)' }}
+        >
+          Oluştur
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
       {/* Summary Modal */}
       {showSummary && summaryData && (
