@@ -219,6 +219,12 @@ export default function NewPatientPageClient() {
           setLoading(false);
           return;
         }
+        // Düzenlemede TC girildiyse 11 hane olmalı
+        if (isEdit && form.tc && form.tc.length !== 11) {
+          setMessage("TC Kimlik No 11 haneli olmalı.");
+          setLoading(false);
+          return;
+        }
         // Sadece yeni hasta eklerken TC zorunlu
         if (!isEdit) {
           if (!form.tc) {
@@ -248,6 +254,7 @@ export default function NewPatientPageClient() {
                 phone: form.phone,
                 birthDate: form.birthDate,
                 anamnez: form.anamnez,
+                tcNumber: form.tc,
                 branchId: selectedBranch // Şube bilgisini ekle
               };
               const res = await fetch(url, {
@@ -365,9 +372,7 @@ export default function NewPatientPageClient() {
                 onChange={handleChange}
                 required={!editingPatientId}
                 maxLength={11}
-                disabled={!!editingPatientId}
                 className={`np-input${tcError ? ' np-input-error' : ''}`}
-                style={editingPatientId ? { color: '#888' } : {}}
               />
               {tcError && <span className="np-error-text">{tcError}</span>}
             </label>

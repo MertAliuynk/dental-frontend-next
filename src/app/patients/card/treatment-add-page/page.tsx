@@ -235,6 +235,24 @@ function TreatmentAddPageClient() {
         });
         const j = await res.json();
         if (!res.ok || !j?.success) throw new Error(j?.message || "Hata");
+        // Tedavi önerilirken girilen notu hasta notlarına da ekle
+        const noteText = (it.notes || "").trim();
+        if (noteText) {
+          const teethInfo = it.toothNumbers && it.toothNumbers.length > 0 ? ` (Dişler: ${it.toothNumbers.join(", ")})` : "";
+          try {
+            await fetch("https://dentalapi.karadenizdis.com/api/patient-notes", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
+              },
+              body: JSON.stringify({
+                patient_id: patient.patient_id,
+                note: `Tedavi önerisi - ${it.treatmentName}${teethInfo}: ${noteText}`,
+              }),
+            });
+          } catch {}
+        }
       }
       
       setPending([]);

@@ -37,6 +37,47 @@ export default function PatientCardPageClient() {
   const [editNoteModal, setEditNoteModal] = useState(false);
   const [editNoteValue, setEditNoteValue] = useState("");
   const [patient, setPatient] = useState<any>(null);
+  // Hasta notları (patient_notes) satır içi düzenleme
+  const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
+  const [editingNoteText, setEditingNoteText] = useState("");
+  const [savingNote, setSavingNote] = useState(false);
+  const handleSaveNoteEdit = async (noteId: number) => {
+    if (!editingNoteText.trim()) {
+      alert('Not boş olamaz!');
+      return;
+    }
+    try {
+      setSavingNote(true);
+      const res = await fetch(`https://dentalapi.karadenizdis.com/api/patient-notes/${noteId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ note: editingNoteText })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setPatientNotes(prev => prev.map(n => n.note_id === noteId ? { ...n, note: editingNoteText } : n));
+        setEditingNoteId(null);
+        setEditingNoteText("");
+      } else {
+        alert(data.message || 'Güncelleme başarısız!');
+      }
+    } catch {
+      alert('Sunucu hatası!');
+    } finally {
+      setSavingNote(false);
+    }
+  };
+  // Tedavi tarihlerini tarih + saat olarak göster (saat kısmı bölünmez)
+  const fmtDT = (d: any) => {
+    const date = new Date(d);
+    if (isNaN(date.getTime())) return "-";
+    return (
+      <>
+        {date.toLocaleDateString('tr-TR')}{" "}
+        <span style={{ whiteSpace: 'nowrap' }}>{date.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}</span>
+      </>
+    );
+  };
 
   // Modal açıldığında mevcut notu göster
   useEffect(() => {
@@ -1021,7 +1062,7 @@ export default function PatientCardPageClient() {
                                   style={{ cursor: "pointer" }}
                                 />
                               )}
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1, minWidth: 0, overflowWrap: 'anywhere' }}>
                                 <div>
                                   {treatmentName}
                                   {/* Doktor adı küçük ve belirgin şekilde */}
@@ -1047,21 +1088,21 @@ export default function PatientCardPageClient() {
                                 {/* Tedavi tarihi bilgisi */}
                                 <div style={{ fontSize: 11, color: '#666', fontStyle: 'italic' }}>
                                   {tr.status === 'önerilen' && tr.suggested_at && (
-                                    <>📅 Önerilme: {new Date(tr.suggested_at).toLocaleDateString('tr-TR')}</>
+                                    <>📅 Önerilme: {fmtDT(tr.suggested_at)}</>
                                   )}
                                   {tr.status === 'onaylanan' && tr.approved_at && (
-                                    <>✅ Onaylanma: {new Date(tr.approved_at).toLocaleDateString('tr-TR')}</>
+                                    <>✅ Onaylanma: {fmtDT(tr.approved_at)}</>
                                   )}
                                   {tr.status === 'tamamlanan' && tr.completed_at && (
-                                    <>🎉 Tamamlanma: {new Date(tr.completed_at).toLocaleDateString('tr-TR')}</>
+                                    <>🎉 Tamamlanma: {fmtDT(tr.completed_at)}</>
                                   )}
                                   {!tr.suggested_at && !tr.approved_at && !tr.completed_at && tr.created_at && (
-                                    <>📅 Kayıt: {new Date(tr.created_at).toLocaleDateString('tr-TR')}</>
+                                    <>📅 Kayıt: {fmtDT(tr.created_at)}</>
                                   )}
                                 </div>
                               </div>
                               {showTotals && (
-                                <span style={{ fontWeight: 700, color: '#0a2972' }}>
+                                <span style={{ fontWeight: 700, color: '#0a2972', flexShrink: 0, whiteSpace: 'nowrap' }}>
                                   ₺{getLineTotal(tr).toLocaleString('tr-TR')}
                                 </span>
                               )}
@@ -1188,7 +1229,7 @@ export default function PatientCardPageClient() {
                                   style={{ cursor: "pointer" }}
                                 />
                               )}
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1, minWidth: 0, overflowWrap: 'anywhere' }}>
                                 <div>
                                   {treatmentName}
                                   {/* Doktor adı küçük ve belirgin şekilde */}
@@ -1214,21 +1255,21 @@ export default function PatientCardPageClient() {
                                 {/* Tedavi tarihi bilgisi */}
                                 <div style={{ fontSize: 11, color: '#666', fontStyle: 'italic' }}>
                                   {tr.status === 'onaylanan' && tr.approved_at && (
-                                    <>✅ Onaylanma: {new Date(tr.approved_at).toLocaleDateString('tr-TR')}</>
+                                    <>✅ Onaylanma: {fmtDT(tr.approved_at)}</>
                                   )}
                                   {tr.status === 'tamamlanan' && tr.completed_at && (
-                                    <>🎉 Tamamlanma: {new Date(tr.completed_at).toLocaleDateString('tr-TR')}</>
+                                    <>🎉 Tamamlanma: {fmtDT(tr.completed_at)}</>
                                   )}
                                   {!tr.approved_at && !tr.completed_at && tr.suggested_at && (
-                                    <>📅 Önerilme: {new Date(tr.suggested_at).toLocaleDateString('tr-TR')}</>
+                                    <>📅 Önerilme: {fmtDT(tr.suggested_at)}</>
                                   )}
                                   {!tr.suggested_at && !tr.approved_at && !tr.completed_at && tr.created_at && (
-                                    <>📅 Kayıt: {new Date(tr.created_at).toLocaleDateString('tr-TR')}</>
+                                    <>📅 Kayıt: {fmtDT(tr.created_at)}</>
                                   )}
                                 </div>
                               </div>
                               {showTotals && (
-                                <span style={{ fontWeight: 700, color: '#0a2972' }}>
+                                <span style={{ fontWeight: 700, color: '#0a2972', flexShrink: 0, whiteSpace: 'nowrap' }}>
                                   ₺{getLineTotal(tr).toLocaleString('tr-TR')}
                                 </span>
                               )}
@@ -1328,7 +1369,7 @@ export default function PatientCardPageClient() {
                                 onChange={e => { e.stopPropagation(); toggleCompletedTreatmentSelection(tr.treatment_id); }}
                                 style={{ cursor: "pointer" }}
                               />
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1, minWidth: 0, overflowWrap: 'anywhere' }}>
                                 <div>
                                   {treatmentName}
                                   {tr.doctor_name && (
@@ -1341,16 +1382,16 @@ export default function PatientCardPageClient() {
                                 {/* Tedavi tarihi bilgisi */}
                                 <div style={{ fontSize: 11, color: '#666', fontStyle: 'italic' }}>
                                   {tr.completed_at && (
-                                    <>🎉 Tamamlanma: {new Date(tr.completed_at).toLocaleDateString('tr-TR')}</>
+                                    <>🎉 Tamamlanma: {fmtDT(tr.completed_at)}</>
                                   )}
                                   {!tr.completed_at && tr.approved_at && (
-                                    <>✅ Onaylanma: {new Date(tr.approved_at).toLocaleDateString('tr-TR')}</>
+                                    <>✅ Onaylanma: {fmtDT(tr.approved_at)}</>
                                   )}
                                   {!tr.completed_at && !tr.approved_at && tr.suggested_at && (
-                                    <>📅 Önerilme: {new Date(tr.suggested_at).toLocaleDateString('tr-TR')}</>
+                                    <>📅 Önerilme: {fmtDT(tr.suggested_at)}</>
                                   )}
                                   {!tr.completed_at && !tr.approved_at && !tr.suggested_at && tr.created_at && (
-                                    <>📅 Kayıt: {new Date(tr.created_at).toLocaleDateString('tr-TR')}</>
+                                    <>📅 Kayıt: {fmtDT(tr.created_at)}</>
                                   )}
                                 </div>
                               </div>
@@ -1566,16 +1607,56 @@ export default function PatientCardPageClient() {
                         </div>
 
                         {/* Content */}
-                        <div style={{
-                          fontSize: 15,
-                          lineHeight: 1.6,
-                          color: '#374151',
-                          wordWrap: 'break-word',
-                          whiteSpace: 'pre-wrap',
-                          minHeight: 40
-                        }}>
-                          {note.note}
-                        </div>
+                        {editingNoteId === note.note_id ? (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                            <textarea
+                              value={editingNoteText}
+                              onChange={e => setEditingNoteText(e.target.value)}
+                              autoFocus
+                              style={{
+                                width: '100%',
+                                boxSizing: 'border-box',
+                                minHeight: 80,
+                                border: '1.5px solid #b6c6e6',
+                                borderRadius: 8,
+                                padding: 10,
+                                fontSize: 15,
+                                fontFamily: 'inherit',
+                                outline: 'none',
+                                resize: 'vertical'
+                              }}
+                            />
+                            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                              <button
+                                type="button"
+                                onClick={() => { setEditingNoteId(null); setEditingNoteText(""); }}
+                                style={{ padding: '6px 14px', background: '#6c757d', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}
+                              >
+                                İptal
+                              </button>
+                              <button
+                                type="button"
+                                disabled={savingNote}
+                                onClick={() => handleSaveNoteEdit(note.note_id)}
+                                style={{ padding: '6px 14px', background: savingNote ? '#ccc' : '#1976d2', color: '#fff', border: 'none', borderRadius: 8, cursor: savingNote ? 'not-allowed' : 'pointer', fontWeight: 600, fontSize: 13 }}
+                              >
+                                {savingNote ? 'Kaydediliyor...' : 'Kaydet'}
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div style={{
+                            fontSize: 15,
+                            lineHeight: 1.6,
+                            color: '#374151',
+                            wordWrap: 'break-word',
+                            overflowWrap: 'anywhere',
+                            whiteSpace: 'pre-wrap',
+                            minHeight: 40
+                          }}>
+                            {note.note}
+                          </div>
+                        )}
 
                         {/* Footer */}
                         <div style={{
@@ -1589,6 +1670,15 @@ export default function PatientCardPageClient() {
                           color: '#64748b'
                         }}>
                           <span>📅 Kayıt Tarihi</span>
+                          {editingNoteId !== note.note_id && (
+                            <button
+                              type="button"
+                              onClick={() => { setEditingNoteId(note.note_id); setEditingNoteText(note.note || ""); }}
+                              style={{ marginLeft: 12, padding: '3px 10px', background: '#fff8e1', color: '#b68c00', border: '1px solid #f0d58a', borderRadius: 6, cursor: 'pointer', fontWeight: 600, fontSize: 12 }}
+                            >
+                              ✏️ Düzenle
+                            </button>
+                          )}
                           <div style={{
                             display: 'flex',
                             alignItems: 'center',
